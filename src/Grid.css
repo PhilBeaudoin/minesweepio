@@ -1,0 +1,18 @@
+.Grid {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+}
+
+.Row {
+  display: flex;
+  flex-direction: row;
+}
+
+.Cell {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  background: url('img/minesweeper2x.png');
+}

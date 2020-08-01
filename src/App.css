@@ -1,0 +1,70 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  border-top: solid white 4px;
+  border-left: solid white 4px;
+  border-bottom: solid #808080 4px;
+  border-right: solid #808080 4px;
+  width: fit-content;
+  background: #c0c0c0;
+  padding: 8px;
+}
+
+.Top {
+  display: flex;
+  flex-direction: row;
+  border-top: solid #808080 4px;
+  border-left: solid #808080 4px;
+  border-bottom: solid white 4px;
+  border-right: solid white 4px;
+  flex-grow: 1;
+  background: #c0c0c0;
+  padding: 11px;
+  margin-bottom: 8px;
+}
+
+.Bottom {
+  display: block;
+  border-top: solid #808080 4px;
+  border-left: solid #808080 4px;
+  border-bottom: solid white 4px;
+  border-right: solid white 4px;
+  width: fit-content;
+  background: #c0c0c0;
+}
+
+.DigitBox {
+  display: flex;
+  flex-direction: row;
+  border-top: solid #808080 2px;
+  border-left: solid #808080 2px;
+  border-bottom: solid white 2px;
+  border-right: solid white 2px;
+  width: fit-content;
+  background: #c0c0c0;
+}
+
+.CenterBox {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.FaceBox {
+  width: 50px;
+  min-width: 50px;
+  height: 50px;
+  min-height: 50px;
+  background: url('img/minesweeper2x.png');
+  background-position: 0 -78px;
+}
+
+.Digit {
+  width: 26px;
+  min-width: 26px;
+  height: 46px;
+  min-height: 46px;
+  background: url('img/minesweeper2x.png');
+  background-position: 0 -32px;
+}
