@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import './Grid.css';
 import XYSet from './XYSet';
 
@@ -11,17 +11,21 @@ function containsOnlyCell(cellList, x, y) {
 }
 
 function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
-               setIsClicking, hasExploded, setHasExploded}) {
+               setIsClicking, hasExploded, setHasExploded,
+               isSuccess, setIsSuccess}) {
 
   const [revealedXYs, setRevealedXYs] = useState([]);
   const [capturedElem, setCapturedElem] = useState(null);
   const [isInside, setIsInside] = useState(false);
+  const [numRevealed, setNumRevealed] = useState(0);
 
-  function cellToPosX(hasExploded, x, y) {
+  function cellToPosX(x, y) {
     const state = getStateXY(x, y);
     if (state === ' ') {
       if (hasExploded)
         return mf.grid.getXY(x, y) === '*' ? '-96px' : '0px';
+      else if (isSuccess)
+        return mf.grid.getXY(x, y) === '*' ? '-32px' : '0px';
       else
         return '0px';
     }
@@ -31,8 +35,14 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
       else
         return '-32px';
     }
-    if (state === '?')
-      return '-64px';
+    if (state === '?') {
+      if (hasExploded)
+        return mf.grid.getXY(x, y) === '*' ? '-96px' : '-64px';
+      else if (isSuccess)
+        return mf.grid.getXY(x, y) === '*' ? '-32px' : '-64px';
+      else
+        return '-64px';
+    }
     if (state === '-')
       return '-192px';
     if (state !== '.') {
@@ -54,8 +64,14 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
     return -(192 + 32 * digit) + 'px';
   }
 
+  useEffect(() => {
+    if (numRevealed === mf.grid.sx * mf.grid.sy - mf.numMines)
+      setIsSuccess(true);
+  }, [numRevealed, mf.grid.sx, mf.grid.sy, mf.numMines, setIsSuccess]);
+
   function revealAt(x, y, set) {
     if (getStateXY(x, y) === '.' || set.has(x, y)) return;
+    setNumRevealed(num => num + 1);
     set.add(x, y);
     setStateXY(x, y, '.');
     const val = mf.grid.getXY(x, y);
@@ -77,9 +93,10 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
       // Sometimes pointerDown gets eaten. Fix this by calling pointerDown
       // if we're moving with buttons down but nothing is captured.
       if (e.buttons !== 0 && capturedElem === null) pointerDown(x, y)(e);
-      if (capturedElem !== e.target || hasExploded) return;
+      if (capturedElem !== e.target || hasExploded || isSuccess) return;
       const inside = isEventInside(e, e.target);
       if (revealedXYs.length > 0) {
+        setIsClicking(inside);
         // Toggle the cells that will be revealed.
         if (inside !== isInside) {
           revealedXYs.forEach(xy =>
@@ -93,7 +110,10 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
           mf.grid.forEachNeighbor(x, y, (xx, yy) => {
             if (isRevealable(getStateXY(xx, yy))) {
               setRevealedXYs(r => {r.push([xx, yy]); return r;});
-              if (inside) setStateXY(xx, yy, '-');
+              if (inside) {
+                setIsClicking(true);
+                setStateXY(xx, yy, '-');
+              }
             }
           });
         }
@@ -108,11 +128,12 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
       e.target.setPointerCapture(e.pointerId);
       setCapturedElem(e.target);
 
-      if (hasExploded) return;
+      if (hasExploded || isSuccess) return;
 
       const state = getStateXY(x, y);
       if (e.buttons === 1 && isRevealable(state)) {
         // Left button, reveal a mine if the mouse is released here.
+        setIsClicking(true);
         setIsInside(true);
         setRevealedXYs([[x, y]]);
         setStateXY(x, y, '-');
@@ -132,6 +153,7 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
       e.preventDefault();
       e.target.releasePointerCapture(e.pointerId);
       setCapturedElem(null);
+      setIsClicking(false);
 
       let reveal = false;
       if (isInside) {
@@ -147,10 +169,12 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
           reveal = flagCount === mf.grid.getXY(x, y);
         }
       }
-      if (reveal)
-        revealedXYs.forEach(xy => revealAt(...xy, new XYSet(mf.grid)));
-      else
+      if (reveal) {
+        const set = new XYSet(mf.grid);
+        revealedXYs.forEach(xy => revealAt(...xy, set));
+      } else {
         revealedXYs.forEach(xy => setStateXY(...xy, ' '));
+      }
       setRevealedXYs([]);
       setIsInside(false);
     }
@@ -159,7 +183,7 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
   function renderCell(y) {
     return (state, x) => {
       return (<div key={x} className="Cell"
-               style={{backgroundPositionX: cellToPosX(hasExploded, x, y)}}
+               style={{backgroundPositionX: cellToPosX(x, y)}}
                onPointerDown={pointerDown(x, y)}
                onPointerUp={pointerUp(x, y)}
                onPointerMove={pointerMove(x, y)}
