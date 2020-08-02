@@ -6,7 +6,8 @@ import XYSet from './XYSet';
 // When we succeed we reset
 const mineDecayBase = 1/256;
 
-export function createLogicMinefield(sizeX, sizeY, startX, startY, numMines, rng) {
+export function createLogicMinefield(sizeX, sizeY, startX, startY,
+                                     numMines, rng) {
   const mf = new Minefield(sizeX, sizeY, rng);
   mf.start(startX, startY);
 
@@ -29,7 +30,8 @@ export function createLogicMinefield(sizeX, sizeY, startX, startY, numMines, rng
   return mf;
 }
 
-export function createRandomMinefield(sizeX, sizeY, startX, startY, numMines, rng) {
+export function createRandomMinefield(sizeX, sizeY, startX, startY,
+                                      numMines, rng) {
   const mf = new Minefield(sizeX, sizeY, rng);
 
   const setToIgnore = new XYSet(mf.grid);

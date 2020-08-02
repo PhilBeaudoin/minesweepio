@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { isEventInside } from './utils.js';
 import './Grid.css';
 import XYSet from './XYSet';
@@ -13,12 +13,11 @@ function containsOnlyCell(cellList, x, y) {
 
 function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
                setIsClicking, hasExploded, setHasExploded,
-               isSuccess, setIsSuccess}) {
+               isSuccess, setIsSuccess, revealAt}) {
 
   const [revealedXYs, setRevealedXYs] = useState([]);
   const [capturedElem, setCapturedElem] = useState(null);
   const [isInside, setIsInside] = useState(false);
-  const [numRevealed, setNumRevealed] = useState(0);
 
   function cellToPosX(x, y) {
     const state = getStateXY(x, y);
@@ -63,38 +62,6 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
       return '0px';
     }
     return -(192 + 32 * digit) + 'px';
-  }
-
-  useEffect(() => {
-    const set = new XYSet(mf.grid);
-    revealAt(0, 0, set);
-    revealAt(mf.grid.sx - 1, 0, set);
-    revealAt(0, mf.grid.sy - 1, set);
-    revealAt(mf.grid.sx - 1, mf.grid.sy - 1, set);
-    revealAt(Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2), set);
-  }, [mf]);
-
-  useEffect(() => {
-    if (numRevealed === mf.grid.sx * mf.grid.sy - mf.numMines) {
-      setNumFlags(mf.numMines);
-      setIsSuccess(true);
-    }
-  }, [numRevealed, mf.grid.sx, mf.grid.sy, mf.numMines, setIsSuccess]);
-
-  function revealAt(x, y, set) {
-    const active = [[x, y]];
-    while (active.length > 0) {
-      [x, y] = active.pop();
-      if (getStateXY(x, y) === '.' || set.has(x, y)) continue;
-      setNumRevealed(num => num + 1);
-      set.add(x, y);
-      setStateXY(x, y, '.');
-      const val = mf.grid.getXY(x, y);
-      if (val === '*')
-        setHasExploded(true);
-      else if (val === 0)
-        mf.grid.forEachNeighbor(x, y, (xx, yy) => active.push([xx, yy]));
-    }
   }
 
   function pointerDown(x, y) {

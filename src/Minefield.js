@@ -67,7 +67,7 @@ class Minefield {
       if (!setToIgnore.has(x, y))
         options.add(x, y);
     });
-    const mines = options.randomSubset(totalMines);
+    const mines = options.randomSubset(totalMines, this.rng);
     this.grid.forEachXYVal((x, y) => {
       this.grid.setXY(x, y, mines.has(x, y) ? '*' : '?');
     });

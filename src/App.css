@@ -1,25 +1,34 @@
+.AppContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  background: #c0c0c0;
+}
+
 .App {
   display: flex;
   flex-direction: column;
-/*
+
   border-top: solid white 4px;
   border-left: solid white 4px;
   border-bottom: solid #808080 4px;
   border-right: solid #808080 4px;
-*/
+
   width: fit-content;
   background: #c0c0c0;
-  padding: 12px;
+  padding: 8px;
 }
 
 .Top {
   display: flex;
+  height: fit-content;
   flex-direction: row;
   border-top: solid #808080 4px;
   border-left: solid #808080 4px;
   border-bottom: solid white 4px;
   border-right: solid white 4px;
-  flex-grow: 1;
   background: #c0c0c0;
   padding: 11px;
   margin-bottom: 8px;
@@ -27,27 +36,31 @@
 
 .Bottom {
   display: block;
+  width: fit-content;
+  height: fit-content;
   border-top: solid #808080 4px;
   border-left: solid #808080 4px;
   border-bottom: solid white 4px;
   border-right: solid white 4px;
-  width: fit-content;
   background: #c0c0c0;
 }
 
 .DigitBox {
   display: flex;
+  width: fit-content;
+  height: fit-content;
   flex-direction: row;
   border-top: solid #808080 2px;
   border-left: solid #808080 2px;
   border-bottom: solid white 2px;
   border-right: solid white 2px;
-  width: fit-content;
   background: #c0c0c0;
 }
 
 .CenterBox {
   display: flex;
+  width: fit-content;
+  height: fit-content;
   flex-grow: 1;
   flex-direction: row;
   justify-content: center;

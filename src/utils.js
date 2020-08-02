@@ -1,8 +1,8 @@
 let seed = 93191;
-export function setUserRandomSeed(newSeed) {
+export function setSimpleRandomSeed(newSeed) {
   seed = newSeed;
 }
-export function userRandom() {
+export function simpleRandom() {
   seed = (seed * 9301 + 49297) % 233280;
   return seed / 233280.0;
 }
