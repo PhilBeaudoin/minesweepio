@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import DigitBox from './DigitBox';
+import { useState, useEffect, useRef } from 'react';
 
-function TimerBox({ minefield, isRunning }) {
+function useTimer(start) {
 
   const [ time, setTime ] = useState(0);
-
-  useEffect(() => setTime(0), [minefield]);
+  const [ isRunning, setIsRunning ] = useState(start);
 
   let interval = useRef(null);
   useEffect(() => {
@@ -19,7 +17,7 @@ function TimerBox({ minefield, isRunning }) {
     return () => clearInterval(interval.current);
   }, [isRunning, time]);
 
-  return (<DigitBox value={time} numDigits={4} />);
+  return [time, () => setTime(0), setIsRunning];
 }
 
-export default TimerBox;
+export default useTimer;

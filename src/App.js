@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
-import TimerBox from './TimerBox';
+import useTimer from './useTimer';
 import DigitBox from './DigitBox';
 import FaceBox from './FaceBox';
 import Grid from './Grid';
@@ -30,6 +30,12 @@ function App() {
   const [ hasExploded, setHasExploded ] = useState(false);
   const [ isSuccess, setIsSuccess ] = useState(false);
   const [ isWorried, setIsWorried ] = useState(false);
+
+  const [ time, resetTimer, setTimerRunning ] = useTimer(false);
+
+  useEffect(() => {
+    setTimerRunning(!hasExploded && !isSuccess);
+  }, [setTimerRunning, hasExploded, isSuccess]);
 
   const emptyState = useCallback(() => {
     return ' '.repeat(mf.grid.sx * mf.grid.sy);
@@ -72,6 +78,7 @@ function App() {
     setIsSuccess(false);
     setNumRevealed(0);
     setStateGrid(emptyState());
+    resetTimer();
   }, [setMf, setNumFlags, setHasExploded, setIsSuccess,
       setNumRevealed, setStateGrid, emptyState]);
 
@@ -104,7 +111,7 @@ function App() {
                      isSuccess={isSuccess}
                      resetState={resetState} />
           </div>
-          <TimerBox minefield={mf} isRunning={!hasExploded && !isSuccess} />
+          <DigitBox value={time} numDigits={4} />
         </div>
         <div className='Bottom'>
           <Grid minefield={mf}
