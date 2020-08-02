@@ -4,8 +4,8 @@ import Grid from './Grid';
 import createMinefield from './createMinefield';
 import { userRandom } from './utils';
 
-//const mf = createMinefield(59, 30, 30, 15, 500); //, userRandom);
-const mf = createMinefield(10, 10, 5, 5, 10);
+const mf = createMinefield(59, 30, 30, 15, 500); //, userRandom);
+//const mf = createMinefield(10, 10, 5, 5, 10);
 
 function getPosXForDigit(val, digitPos) {
   if (val < 0) val = 0;
