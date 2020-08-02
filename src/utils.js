@@ -1,21 +1,10 @@
-let seed = 9391;
-function myRandom() {
+let seed = 93191;
+export function setUserRandomSeed(newSeed) {
+  seed = newSeed;
+}
+export function userRandom() {
   seed = (seed * 9301 + 49297) % 233280;
   return seed / 233280.0;
-}
-
-export function pickRandomlyFromSet(n, set) {
-  const array = Array.from(set);
-  let result = new Set();
-  for (let i = array.length - n; i < array.length; ++i) {
-    let idx = Math.floor(Math.random() * (i + 1));
-//    let idx = Math.floor(myRandom() * (i + 1));
-    if (result.has(array[idx]))
-      result.add(array[i]);
-    else
-      result.add(array[idx]);
-  }
-  return result;
 }
 
 export function areNeighbors(x1, y1, x2, y2) {
