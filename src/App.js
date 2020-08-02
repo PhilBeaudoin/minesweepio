@@ -10,17 +10,15 @@ import { alea } from 'seedrandom';
 
 
 const seed = Math.random();
-const rng = new alea(seed);
-const sx = 59;
-const sy = 30;
-const numMines = 450;
-// const sx = 10;
-// const sy = 10;
-// const numMines = 10;
+const rng = Math.random; //new alea(seed);
+
+const logic = false;
+const [sx, sy, numMines] = [59, 30, 450];
+//const [sx, sy, numMines] = [10, 10, 10];
+
 function createMf() {
-  return createRandomMinefield(sx, sy,
-                               Math.floor(sx/2), Math.floor(sy/2),
-                               numMines, rng);
+  const func = logic ? createLogicMinefield : createRandomMinefield;
+  return func(sx, sy, Math.floor(sx/2), Math.floor(sy/2), numMines, rng);
 }
 
 function App() {
@@ -85,10 +83,12 @@ function App() {
   useEffect(() => {
     if (numRevealed === 0) {
       const set = new XYSet(mf.grid);
-      revealAt(0, 0, set);
-      revealAt(mf.grid.sx - 1, 0, set);
-      revealAt(0, mf.grid.sy - 1, set);
-      revealAt(mf.grid.sx - 1, mf.grid.sy - 1, set);
+      if (!logic) {
+        revealAt(0, 0, set);
+        revealAt(mf.grid.sx - 1, 0, set);
+        revealAt(0, mf.grid.sy - 1, set);
+        revealAt(mf.grid.sx - 1, mf.grid.sy - 1, set);
+      }
       revealAt(Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2), set);
     }
   }, [numRevealed, mf, revealAt]);
