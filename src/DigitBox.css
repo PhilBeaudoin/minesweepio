@@ -1,0 +1,20 @@
+.DigitBox {
+  display: flex;
+  width: fit-content;
+  height: fit-content;
+  flex-direction: row;
+  border-top: solid #808080 2px;
+  border-left: solid #808080 2px;
+  border-bottom: solid white 2px;
+  border-right: solid white 2px;
+  background: #c0c0c0;
+}
+
+.Digit {
+  width: 26px;
+  min-width: 26px;
+  height: 46px;
+  min-height: 46px;
+  background: url('img/minesweeper2x.png');
+  background-position: 0 -32px;
+}

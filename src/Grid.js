@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { isEventInside } from './utils.js';
 import './Grid.css';
 import XYSet from './XYSet';
@@ -11,13 +11,69 @@ function containsOnlyCell(cellList, x, y) {
   return cellList.length === 1 && cellList[0][0] === x && cellList[0][1] === y;
 }
 
-function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
-               setIsClicking, hasExploded, setHasExploded,
-               isSuccess, setIsSuccess, revealAt}) {
+function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
+               setHasExploded, isSuccess, setIsSuccess}) {
 
-  const [revealedXYs, setRevealedXYs] = useState([]);
-  const [capturedElem, setCapturedElem] = useState(null);
-  const [isInside, setIsInside] = useState(false);
+  const emptyState = useCallback(() => {
+    return ' '.repeat(mf.grid.sx * mf.grid.sy);
+  }, [mf]);
+
+  const [ revealedXYs, setRevealedXYs ] = useState([]);
+  const [ capturedElem, setCapturedElem ] = useState(null);
+  const [ isInside, setIsInside ] = useState(false);
+
+  const [ numRevealed, setNumRevealed ] = useState(0);
+  const [ stateGrid, setStateGrid ] = useState(emptyState());
+
+  const getStateXY = useCallback((x, y) => {
+    return stateGrid[y * mf.grid.sx + x];
+  }, [mf, stateGrid]);
+
+  const setStateXY = useCallback((x, y, val) => {
+    setStateGrid(sg => {
+      const loc = y * mf.grid.sx + x;
+      return sg.substr(0, loc) + val + sg.substr(loc + 1);
+    });
+  }, [mf]);
+
+  const revealAt = useCallback((x, y, set) => {
+    const active = [[x, y]];
+    while (active.length > 0) {
+      [x, y] = active.pop();
+      if (getStateXY(x, y) === '.' || set.has(x, y)) continue;
+      setNumRevealed(num => num + 1);
+      set.add(x, y);
+      setStateXY(x, y, '.');
+      const val = mf.grid.getXY(x, y);
+      if (val === '*')
+        setHasExploded(true);
+      else if (val === 0)
+        mf.grid.forEachNeighbor(x, y, (xx, yy) => active.push([xx, yy]));
+    }
+  }, [mf, getStateXY, setStateXY, setHasExploded]);
+
+  useEffect(() => {
+    setNumRevealed(0);
+    setStateGrid(emptyState());
+  }, [emptyState])
+
+  useEffect(() => {
+    if (numRevealed === 0) {
+      const set = new XYSet(mf.grid);
+      revealAt(0, 0, set);
+      revealAt(mf.grid.sx - 1, 0, set);
+      revealAt(0, mf.grid.sy - 1, set);
+      revealAt(mf.grid.sx - 1, mf.grid.sy - 1, set);
+      revealAt(Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2), set);
+    }
+  }, [numRevealed, mf, revealAt]);
+
+  useEffect(() => {
+    if (numRevealed === mf.grid.sx * mf.grid.sy - mf.numMines) {
+      setNumFlags(mf.numMines);
+      setIsSuccess(true);
+    }
+  }, [numRevealed, setNumFlags, mf, setIsSuccess]);
 
   function cellToPosX(x, y) {
     const state = getStateXY(x, y);
@@ -75,10 +131,10 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
       const state = getStateXY(x, y);
       if (e.buttons === 1 && isRevealable(state)) {
         // Left button, reveal a mine if the mouse is released here.
-        setIsClicking(true);
+        setIsWorried(true);
         setIsInside(true);
         setRevealedXYs([[x, y]]);
-        setStateXY(x, y, '-');
+//        setStateXY(x, y, '-');
       } else if (e.buttons === 2) {
         // Immediately cycle through [empty, flag, ?]
         const cycle = ' f?';
@@ -95,7 +151,7 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
       e.preventDefault();
       e.target.releasePointerCapture(e.pointerId);
       setCapturedElem(null);
-      setIsClicking(false);
+      setIsWorried(false);
 
       let reveal = false;
       if (isInside) {
@@ -131,12 +187,12 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
       if (capturedElem !== e.target || hasExploded || isSuccess) return;
       const inside = isEventInside(e, e.target);
       if (revealedXYs.length > 0) {
-        setIsClicking(inside);
+        setIsWorried(inside);
         // Toggle the cells that will be revealed.
-        if (inside !== isInside) {
-          revealedXYs.forEach(xy =>
-              setStateXY(...xy, inside ? '-' : ' '));
-        }
+        // if (inside !== isInside) {
+        //   revealedXYs.forEach(xy =>
+        //       setStateXY(...xy, inside ? '-' : ' '));
+        // }
       } else {
         // If both buttons are pressed and we're on a revealed digit,
         // start revealing the cells around it.
@@ -146,8 +202,8 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
             if (isRevealable(getStateXY(xx, yy))) {
               setRevealedXYs(r => {r.push([xx, yy]); return r;});
               if (inside) {
-                setIsClicking(true);
-                setStateXY(xx, yy, '-');
+                setIsWorried(true);
+//                setStateXY(xx, yy, '-');
               }
             }
           });
