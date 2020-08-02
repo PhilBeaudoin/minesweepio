@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { isEventInside } from './utils.js';
 import './Grid.css';
 import XYSet from './XYSet';
@@ -12,70 +12,13 @@ function containsOnlyCell(cellList, x, y) {
 }
 
 function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
-               setHasExploded, isSuccess, setIsSuccess}) {
+               isSuccess, getStateXY, setStateXY, revealAt}) {
 
-  const emptyState = useCallback(() => {
-    return ' '.repeat(mf.grid.sx * mf.grid.sy);
-  }, [mf]);
-
-  const [ revealedXYs, setRevealedXYs ] = useState([]);
   const [ capturedElem, setCapturedElem ] = useState(null);
   const [ isInside, setIsInside ] = useState(false);
+  const [ revealedXYs, setRevealedXYs ] = useState([]);
 
-  const [ numRevealed, setNumRevealed ] = useState(0);
-  const [ stateGrid, setStateGrid ] = useState(emptyState());
-
-  const getStateXY = useCallback((x, y) => {
-    return stateGrid[y * mf.grid.sx + x];
-  }, [mf, stateGrid]);
-
-  const setStateXY = useCallback((x, y, val) => {
-    setStateGrid(sg => {
-      const loc = y * mf.grid.sx + x;
-      return sg.substr(0, loc) + val + sg.substr(loc + 1);
-    });
-  }, [mf]);
-
-  const revealAt = useCallback((x, y, set) => {
-    const active = [[x, y]];
-    while (active.length > 0) {
-      [x, y] = active.pop();
-      if (getStateXY(x, y) === '.' || set.has(x, y)) continue;
-      setNumRevealed(num => num + 1);
-      set.add(x, y);
-      setStateXY(x, y, '.');
-      const val = mf.grid.getXY(x, y);
-      if (val === '*')
-        setHasExploded(true);
-      else if (val === 0)
-        mf.grid.forEachNeighbor(x, y, (xx, yy) => active.push([xx, yy]));
-    }
-  }, [mf, getStateXY, setStateXY, setHasExploded]);
-
-  useEffect(() => {
-    setNumRevealed(0);
-    setStateGrid(emptyState());
-  }, [emptyState])
-
-  useEffect(() => {
-    if (numRevealed === 0) {
-      const set = new XYSet(mf.grid);
-      revealAt(0, 0, set);
-      revealAt(mf.grid.sx - 1, 0, set);
-      revealAt(0, mf.grid.sy - 1, set);
-      revealAt(mf.grid.sx - 1, mf.grid.sy - 1, set);
-      revealAt(Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2), set);
-    }
-  }, [numRevealed, mf, revealAt]);
-
-  useEffect(() => {
-    if (numRevealed === mf.grid.sx * mf.grid.sy - mf.numMines) {
-      setNumFlags(mf.numMines);
-      setIsSuccess(true);
-    }
-  }, [numRevealed, setNumFlags, mf, setIsSuccess]);
-
-  function cellToPosX(x, y) {
+  const cellToPosX = useCallback((x, y) => {
     const state = getStateXY(x, y);
     if (state === ' ') {
       if (hasExploded)
@@ -118,9 +61,9 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
       return '0px';
     }
     return -(192 + 32 * digit) + 'px';
-  }
+  }, [mf, getStateXY, hasExploded, isSuccess]);
 
-  function pointerDown(x, y) {
+  const pointerDown = useCallback((x, y) => {
     return (e) => {
       e.preventDefault();
       e.target.setPointerCapture(e.pointerId);
@@ -134,7 +77,7 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
         setIsWorried(true);
         setIsInside(true);
         setRevealedXYs([[x, y]]);
-//        setStateXY(x, y, '-');
+        setStateXY(x, y, '-');
       } else if (e.buttons === 2) {
         // Immediately cycle through [empty, flag, ?]
         const cycle = ' f?';
@@ -144,9 +87,10 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
         if (state === ' ') setNumFlags(num => num + 1);
       }
     }
-  }
+  }, [hasExploded, isSuccess, getStateXY, setIsWorried, setIsInside,
+      setCapturedElem, setStateXY, setNumFlags]);
 
-  function pointerUp(x, y) {
+  const pointerUp = useCallback((x, y) => {
     return (e) => {
       e.preventDefault();
       e.target.releasePointerCapture(e.pointerId);
@@ -176,9 +120,10 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
       setRevealedXYs([]);
       setIsInside(false);
     }
-  }
+  }, [mf, getStateXY, isInside, revealedXYs, setIsWorried, setStateXY,
+      revealAt]);
 
-  function pointerMove(x, y) {
+  const pointerMove = useCallback((x, y) => {
     return (e) => {
       e.preventDefault();
       // Sometimes pointerDown gets eaten. Fix this by calling pointerDown
@@ -189,10 +134,10 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
       if (revealedXYs.length > 0) {
         setIsWorried(inside);
         // Toggle the cells that will be revealed.
-        // if (inside !== isInside) {
-        //   revealedXYs.forEach(xy =>
-        //       setStateXY(...xy, inside ? '-' : ' '));
-        // }
+        if (inside !== isInside) {
+          revealedXYs.forEach(xy =>
+              setStateXY(...xy, inside ? '-' : ' '));
+        }
       } else {
         // If both buttons are pressed and we're on a revealed digit,
         // start revealing the cells around it.
@@ -203,7 +148,7 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
               setRevealedXYs(r => {r.push([xx, yy]); return r;});
               if (inside) {
                 setIsWorried(true);
-//                setStateXY(xx, yy, '-');
+                setStateXY(xx, yy, '-');
               }
             }
           });
@@ -211,9 +156,10 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
       }
       setIsInside(inside);
     }
-  }
+  }, [capturedElem, getStateXY, setStateXY, hasExploded, isSuccess, mf.grid,
+      pointerDown, revealedXYs, setIsWorried, isInside]);
 
-  function renderCell(y) {
+  const renderCell = useCallback((y) => {
     return (state, x) => {
       return (<div key={x} className="Cell"
                style={{backgroundPositionX: cellToPosX(x, y)}}
@@ -223,11 +169,11 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
                onContextMenu={(e) => {e.preventDefault();}}
                />);
     }
-  }
+  }, [cellToPosX, pointerDown, pointerMove, pointerUp]);
 
-  function renderRow(row, y) {
+  const renderRow = useCallback((row, y) => {
     return (<div key={y} className="Row">{row.map(renderCell(y))}</div>);
-  }
+  }, [renderCell]);
 
   return (
     <div className="Grid">
