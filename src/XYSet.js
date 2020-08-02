@@ -2,6 +2,7 @@ class XYSet {
 
   // A simple set that contains X, Y coordinates from a Grid2d
   constructor(grid) {
+    if (!grid) console.log('Error! A XYSet needs a grid!');
     this.grid = grid;
     this.set = new Set();
   }

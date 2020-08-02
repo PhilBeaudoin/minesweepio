@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { isEventInside } from './utils.js';
 import './Grid.css';
 import XYSet from './XYSet';
 
@@ -65,60 +66,34 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
   }
 
   useEffect(() => {
-    if (numRevealed === mf.grid.sx * mf.grid.sy - mf.numMines)
+    const set = new XYSet(mf.grid);
+    revealAt(0, 0, set);
+    revealAt(mf.grid.sx - 1, 0, set);
+    revealAt(0, mf.grid.sy - 1, set);
+    revealAt(mf.grid.sx - 1, mf.grid.sy - 1, set);
+    revealAt(Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2), set);
+  }, [mf]);
+
+  useEffect(() => {
+    if (numRevealed === mf.grid.sx * mf.grid.sy - mf.numMines) {
+      setNumFlags(mf.numMines);
       setIsSuccess(true);
+    }
   }, [numRevealed, mf.grid.sx, mf.grid.sy, mf.numMines, setIsSuccess]);
 
   function revealAt(x, y, set) {
-    if (getStateXY(x, y) === '.' || set.has(x, y)) return;
-    setNumRevealed(num => num + 1);
-    set.add(x, y);
-    setStateXY(x, y, '.');
-    const val = mf.grid.getXY(x, y);
-    if (val === '*')
-      setHasExploded(true);
-    else if (val === 0)
-      mf.grid.forEachNeighbor(x, y, (xx, yy) => revealAt(xx, yy, set));
-  }
-
-  function isEventInside(e, elem) {
-    const rect = elem.getBoundingClientRect();
-    return e.clientX >= rect.left && e.clientX <= rect.right &&
-           e.clientY >= rect.top && e.clientY <= rect.bottom;
-  }
-
-  function pointerMove(x, y) {
-    return (e) => {
-      e.preventDefault();
-      // Sometimes pointerDown gets eaten. Fix this by calling pointerDown
-      // if we're moving with buttons down but nothing is captured.
-      if (e.buttons !== 0 && capturedElem === null) pointerDown(x, y)(e);
-      if (capturedElem !== e.target || hasExploded || isSuccess) return;
-      const inside = isEventInside(e, e.target);
-      if (revealedXYs.length > 0) {
-        setIsClicking(inside);
-        // Toggle the cells that will be revealed.
-        if (inside !== isInside) {
-          revealedXYs.forEach(xy =>
-              setStateXY(...xy, inside ? '-' : ' '));
-        }
-      } else {
-        // If both buttons are pressed and we're on a revealed digit,
-        // start revealing the cells around it.
-        if (e.buttons === 3 && getStateXY(x, y) === '.' &&
-            Number.isInteger(mf.grid.getXY(x, y))) {
-          mf.grid.forEachNeighbor(x, y, (xx, yy) => {
-            if (isRevealable(getStateXY(xx, yy))) {
-              setRevealedXYs(r => {r.push([xx, yy]); return r;});
-              if (inside) {
-                setIsClicking(true);
-                setStateXY(xx, yy, '-');
-              }
-            }
-          });
-        }
-      }
-      setIsInside(inside);
+    const active = [[x, y]];
+    while (active.length > 0) {
+      [x, y] = active.pop();
+      if (getStateXY(x, y) === '.' || set.has(x, y)) continue;
+      setNumRevealed(num => num + 1);
+      set.add(x, y);
+      setStateXY(x, y, '.');
+      const val = mf.grid.getXY(x, y);
+      if (val === '*')
+        setHasExploded(true);
+      else if (val === 0)
+        mf.grid.forEachNeighbor(x, y, (xx, yy) => active.push([xx, yy]));
     }
   }
 
@@ -177,6 +152,41 @@ function Grid({minefield:mf, setNumFlags, getStateXY, setStateXY,
       }
       setRevealedXYs([]);
       setIsInside(false);
+    }
+  }
+
+  function pointerMove(x, y) {
+    return (e) => {
+      e.preventDefault();
+      // Sometimes pointerDown gets eaten. Fix this by calling pointerDown
+      // if we're moving with buttons down but nothing is captured.
+      if (e.buttons !== 0 && capturedElem === null) pointerDown(x, y)(e);
+      if (capturedElem !== e.target || hasExploded || isSuccess) return;
+      const inside = isEventInside(e, e.target);
+      if (revealedXYs.length > 0) {
+        setIsClicking(inside);
+        // Toggle the cells that will be revealed.
+        if (inside !== isInside) {
+          revealedXYs.forEach(xy =>
+              setStateXY(...xy, inside ? '-' : ' '));
+        }
+      } else {
+        // If both buttons are pressed and we're on a revealed digit,
+        // start revealing the cells around it.
+        if (e.buttons === 3 && getStateXY(x, y) === '.' &&
+            Number.isInteger(mf.grid.getXY(x, y))) {
+          mf.grid.forEachNeighbor(x, y, (xx, yy) => {
+            if (isRevealable(getStateXY(xx, yy))) {
+              setRevealedXYs(r => {r.push([xx, yy]); return r;});
+              if (inside) {
+                setIsClicking(true);
+                setStateXY(xx, yy, '-');
+              }
+            }
+          });
+        }
+      }
+      setIsInside(inside);
     }
   }
 

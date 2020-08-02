@@ -4,9 +4,9 @@ import XYSet from './XYSet'
 
 class Minefield {
   constructor(sx, sy, rng) {
+    this.rng = rng === undefined ? Math.random : rng;
     this.grid = new Grid2d(sx, sy, '?');
     this.numUnknowns = sx * sy;
-    this.rng = rng === undefined ? Math.random : rng;
     this.numMines = 0;
     this.boundary = new XYSet(this.grid);
     this.toDeduct = new XYSet(this.grid);
@@ -55,6 +55,36 @@ class Minefield {
     });
   }
 
+  hasOnlyFiftyFifty() {
+
+  }
+
+  placeMinesRandomly(totalMines, setToIgnore) {
+    if (setToIgnore === undefined) setToIgnore = new XYSet(this.grid);
+
+    const options = new XYSet(this.grid);
+    this.grid.forEachXYVal((x, y) => {
+      if (!setToIgnore.has(x, y))
+        options.add(x, y);
+    });
+    const mines = options.randomSubset(totalMines);
+    this.grid.forEachXYVal((x, y) => {
+      this.grid.setXY(x, y, mines.has(x, y) ? '*' : '?');
+    });
+    this.numMines = mines.size;
+    this.numUnknowns = this.sx * this.sy - this.numMines;
+
+    this.grid.forEachXYVal((x, y, val) => {
+      if (val === '?')
+        this.grid.setXY(x, y, this.countAllMinesAroundXY(x, y));
+    });
+    this.numUnknowns = 0;
+
+    this.boundary = new XYSet(this.grid);
+    this.toDeduct = new XYSet(this.grid);
+    this.deducted = new XYSet(this.grid);
+  }
+
   placeMinesOnBoundary(totalMines) {
     // First place mines along the boundary
     const numMines = Math.max(0, Math.round((totalMines - this.numMines) *
@@ -80,7 +110,6 @@ class Minefield {
     this.doDeductions();
     this.extendBoundary();
   }
-
 
   backtrack() {
     this.removeBlockingMines();

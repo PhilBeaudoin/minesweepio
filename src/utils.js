@@ -11,6 +11,13 @@ export function areNeighbors(x1, y1, x2, y2) {
   return Math.abs(x2 - x1) <= 1 &&  Math.abs(y2 - y1) <= 1;
 }
 
+
+export function isEventInside(e, elem) {
+  const rect = elem.getBoundingClientRect();
+  return e.clientX >= rect.left && e.clientX <= rect.right &&
+         e.clientY >= rect.top && e.clientY <= rect.bottom;
+}
+
 // Find the group of cells shared between two cells.
 export function sharedGroup(x1, y1, x2, y2) {
   const d = [x2 - x1, y2 - y1];

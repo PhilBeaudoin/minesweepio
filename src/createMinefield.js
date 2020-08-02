@@ -1,11 +1,12 @@
 import Minefield from './Minefield';
+import XYSet from './XYSet';
 
 // mineDecay indicates how many mines we remove from the target number.
 // Every time we fail we double mineDecay.
 // When we succeed we reset
 const mineDecayBase = 1/256;
 
-function createMinefield(sizeX, sizeY, startX, startY, numMines, rng) {
+export function createLogicMinefield(sizeX, sizeY, startX, startY, numMines, rng) {
   const mf = new Minefield(sizeX, sizeY, rng);
   mf.start(startX, startY);
 
@@ -25,9 +26,19 @@ function createMinefield(sizeX, sizeY, startX, startY, numMines, rng) {
     mf.backtrack();
     mineDecay *= 2;
   }
-
-  console.log('Num mines = ', mf.numMines);
   return mf;
 }
 
-export default createMinefield;
+export function createRandomMinefield(sizeX, sizeY, startX, startY, numMines, rng) {
+  const mf = new Minefield(sizeX, sizeY, rng);
+
+  const setToIgnore = new XYSet(mf.grid);
+  setToIgnore.add(0, 0);
+  setToIgnore.add(sizeX - 1, 0);
+  setToIgnore.add(0, sizeY - 1);
+  setToIgnore.add(sizeX - 1, sizeY - 1);
+  mf.grid.forCellsInRing(startX, startY, 1, (x, y) => setToIgnore.add(x, y));
+  mf.placeMinesRandomly(numMines, setToIgnore);
+
+  return mf;
+}

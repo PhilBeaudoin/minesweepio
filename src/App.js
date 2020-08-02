@@ -1,11 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Grid from './Grid';
-import createMinefield from './createMinefield';
-import { userRandom } from './utils';
+import { createLogicMinefield, createRandomMinefield } from './createMinefield';
+import { userRandom, isEventInside } from './utils';
 
-const mf = createMinefield(59, 30, 30, 15, 500); //, userRandom);
-//const mf = createMinefield(10, 10, 5, 5, 10);
+const sx = 59;
+const sy = 30;
+const numMines = 450;
+
+// const sx = 10;
+// const sy = 10;
+// const numMines = 10;
+function createMf() {
+  return createRandomMinefield(sx, sy,
+                               Math.floor(sx/2), Math.floor(sy/2),
+                               numMines);
+}
 
 function getPosXForDigit(val, digitPos) {
   if (val < 0) val = 0;
@@ -16,13 +26,23 @@ function getPosXForDigit(val, digitPos) {
 
 function App() {
 
+  const [ isClicking, setIsClicking ] = useState(false);
+  const [ isClickingOnFace, setIsClickingOnFace ] = useState(false);
+  const [ mf, setMf ] = useState(createMf());
   const [ numFlags, setNumFlags ] = useState(0);
-  const [ isClicking, setIsClicking ] = useState(0);
-  const [ hasExploded, setHasExploded ] = useState(0);
+  const [ hasExploded, setHasExploded ] = useState(false);
   const [ isSuccess, setIsSuccess ] = useState(false);
-  const [ stateGrid, setStateGrid ] =
-      useState(' '.repeat(mf.grid.sx * mf.grid.sy));
+  const [ stateGrid, setStateGrid ] = useState(' '.repeat(sx * sy));
   const [ time, setTime ] = useState(0);
+
+  function resetState() {
+    setMf(createMf());
+    setNumFlags(0);
+    setHasExploded(false);
+    setIsSuccess(false);
+    setStateGrid(' '.repeat(sx * sy));
+    setTime(0);
+  }
 
   let interval = useRef(null);
   useEffect(() => {
@@ -47,16 +67,45 @@ function App() {
   }
 
   function getPosXForFace() {
+    if (isClicking) {
+      return isClickingOnFace ? '-200px' : '-50px';
+    }
     if (hasExploded) return '-100px';
     if (isSuccess) return '-150px';
-    if (isClicking) return '-50px';
     return '0px';
+  }
+
+  function pointerDown(e) {
+    if (e.buttons !== 1) return;
+    e.preventDefault();
+    e.target.setPointerCapture(e.pointerId);
+    setIsClicking(true);
+    setIsClickingOnFace(true);
+  }
+
+  function pointerUp(e) {
+    if (isClickingOnFace) {
+      e.preventDefault();
+      e.target.releasePointerCapture(e.pointerId);
+      setIsClicking(false);
+      setIsClickingOnFace(false);
+      resetState();
+    }
+  }
+
+  function pointerMove(e) {
+    if (isClickingOnFace) {
+      e.preventDefault();
+      setIsClicking(isEventInside(e, e.target));
+    }
   }
 
   return (
     <div className='App'>
       <div className='Top'>
         <div className='DigitBox'>
+          <div className='Digit' style={{backgroundPositionX:
+                  getPosXForDigit(mf.numMines - numFlags, 1000)}} />
           <div className='Digit' style={{backgroundPositionX:
                   getPosXForDigit(mf.numMines - numFlags, 100)}} />
           <div className='Digit' style={{backgroundPositionX:
@@ -66,9 +115,15 @@ function App() {
         </div>
         <div className='CenterBox'>
           <div className='FaceBox' style={{backgroundPositionX:
-                  getPosXForFace()}} />
+                  getPosXForFace()}}
+                 onPointerDown={pointerDown}
+                 onPointerUp={pointerUp}
+                 onPointerMove={pointerMove}
+                />
         </div>
         <div className='DigitBox'>
+          <div className='Digit' style={{backgroundPositionX:
+                  getPosXForDigit(time, 1000)}} />
           <div className='Digit' style={{backgroundPositionX:
                   getPosXForDigit(time, 100)}} />
           <div className='Digit' style={{backgroundPositionX:

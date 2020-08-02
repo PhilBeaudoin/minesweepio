@@ -1,13 +1,15 @@
 .App {
   display: flex;
   flex-direction: column;
+/*
   border-top: solid white 4px;
   border-left: solid white 4px;
   border-bottom: solid #808080 4px;
   border-right: solid #808080 4px;
+*/
   width: fit-content;
   background: #c0c0c0;
-  padding: 8px;
+  padding: 12px;
 }
 
 .Top {
