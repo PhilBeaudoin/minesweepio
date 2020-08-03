@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import './FaceBox.css';
 import { isEventInside } from './utils';
 
-function FaceBox({ isWorried, hasExploded, isSuccess, resetState }) {
+function FaceBox({ isWorried, hasExploded, isSuccess, setShowConfig }) {
 
   const [ isClicking, setIsClicking ] = useState(false);
   const [ isInside, setIsInside ] = useState(false);
@@ -27,7 +28,9 @@ function FaceBox({ isWorried, hasExploded, isSuccess, resetState }) {
     if (isClicking) {
       e.preventDefault();
       e.target.releasePointerCapture(e.pointerId);
-      if (isInside) resetState();
+      if (isInside) {
+        setShowConfig(true);
+      }
       setIsClicking(false);
       setIsInside(false);
     }
@@ -46,5 +49,12 @@ function FaceBox({ isWorried, hasExploded, isSuccess, resetState }) {
                onPointerUp={pointerUp}
                onPointerMove={pointerMove} />);
 }
+
+FaceBox.propTypes = {
+  isWorried: PropTypes.bool.isRequired,
+  hasExploded: PropTypes.bool.isRequired,
+  isSuccess: PropTypes.bool.isRequired,
+  setShowConfig: PropTypes.func.isRequired
+};
 
 export default FaceBox;

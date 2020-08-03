@@ -7,40 +7,90 @@ import Grid from './Grid';
 import { createLogicMinefield, createRandomMinefield } from './createMinefield';
 import XYSet from './XYSet';
 import { alea } from 'seedrandom';
-
+import ConfigDialog from './ConfigDialog';
 
 const seed = Math.random();
-const rng = Math.random; //new alea(seed);
+const rng = new alea(seed);
 
-const logic = false;
-const [sx, sy, numMines] = [59, 30, 450];
-//const [sx, sy, numMines] = [10, 10, 10];
+const defaultConfig = {
+  'size': {x: 9, y: 9} ,
+  'numMines': 10,
+  'isLogic': false
+};
 
-function createMf() {
-  const func = logic ? createLogicMinefield : createRandomMinefield;
-  return func(sx, sy, Math.floor(sx/2), Math.floor(sy/2), numMines, rng);
+const sizeBounds = { min: {x: 9, y: 9}, max: {x: 59, y: 30} }
+const numMinesBoundsRaw = { min: 10, max: 0.33898 }
+
+function calcNumMinesBounds(size) {
+  return { min: numMinesBoundsRaw.min,
+           max: Math.round(numMinesBoundsRaw.max * size.x * size.y)};
+}
+
+function validateSize(size) {
+  return typeof(size) === 'object' &&
+         Number.isInteger(size.x) && Number.isInteger(size.y) &&
+         size.x >= sizeBounds.min.x && size.x <= sizeBounds.max.x &&
+         size.y >= sizeBounds.min.y && size.y <= sizeBounds.max.y;
+}
+
+function validateNumMines(numMines, size) {
+  if (!validateSize(size)) return false;
+  const numMinesBounds = calcNumMinesBounds(size);
+  return Number.isInteger(numMines) &&
+         numMines >= numMinesBounds.min && numMines <= numMinesBounds.max;
+}
+
+function validateConfig(config) {
+  return validateSize(config.size) &&
+         validateNumMines(config.numMines, config.size) &&
+         typeof(config.isLogic) === 'boolean';
+}
+
+const configVarName = 'config';
+function getConfigFromStorage() {
+  try {
+    const config = JSON.parse(localStorage.getItem(configVarName));
+    if (validateConfig(config)) return config;
+  } catch(err) {}
+  localStorage.clear();
+  return defaultConfig;
+}
+function setConfigInStorage(config) {
+  if (validateConfig(config))
+    localStorage.setItem(configVarName, JSON.stringify(config));
+}
+
+function createMinefield(config) {
+  const func = config.isLogic ? createLogicMinefield : createRandomMinefield;
+  return func(config.size.x, config.size.y,
+              Math.floor(config.size.x/2), Math.floor(config.size.y/2),
+              config.numMines, rng);
 }
 
 function App() {
 
-  const [ mf, setMf ] = useState(createMf());
-  const [ numFlags, setNumFlags ] = useState(0);
-  const [ hasExploded, setHasExploded ] = useState(false);
-  const [ isSuccess, setIsSuccess ] = useState(false);
-  const [ isWorried, setIsWorried ] = useState(false);
+  // Config state
+  const [ targetConfig, setTargetConfig ] = useState(getConfigFromStorage());
+  const [ currentConfig, setCurrentConfig ] = useState(null);
 
-  const [ time, resetTimer, setTimerRunning ] = useTimer(false);
+  // Board state
+  const [ mf, setMf ] = useState(null);
+  const [ numFlags, setNumFlags ] = useState(null);
+  const [ hasExploded, setHasExploded ] = useState(null);
+  const [ isSuccess, setIsSuccess ] = useState(null);
+  const [ numRevealed, setNumRevealed ] = useState(null);
+  const [ stateGrid, setStateGrid ] = useState(null);
+
+  // Timer state
+  const [ time, resetTimer, setTimerRunning ] = useTimer(null);
+
+  // UI state
+  const [ isWorried, setIsWorried ] = useState(false);
+  const [ showConfig, setShowConfig ] = useState(false);
 
   useEffect(() => {
-    setTimerRunning(!hasExploded && !isSuccess);
-  }, [setTimerRunning, hasExploded, isSuccess]);
-
-  const emptyState = useCallback(() => {
-    return ' '.repeat(mf.grid.sx * mf.grid.sy);
-  }, [mf]);
-
-  const [ numRevealed, setNumRevealed ] = useState(0);
-  const [ stateGrid, setStateGrid ] = useState(emptyState());
+    setTimerRunning(!hasExploded && !isSuccess && !showConfig);
+  }, [setTimerRunning, hasExploded, isSuccess, showConfig]);
 
   const getStateXY = useCallback((x, y) => {
     return stateGrid[y * mf.grid.sx + x];
@@ -69,21 +119,18 @@ function App() {
     }
   }, [mf, getStateXY, setStateXY, setHasExploded]);
 
-  const resetState = useCallback(() => {
-    setMf(createMf());
-    setNumFlags(0);
-    setHasExploded(false);
-    setIsSuccess(false);
-    setNumRevealed(0);
-    setStateGrid(emptyState());
-    resetTimer();
-  }, [setMf, setNumFlags, setHasExploded, setIsSuccess,
-      setNumRevealed, setStateGrid, emptyState]);
+  const numMinesLeft = useCallback(() => {
+    return mf ? mf.numMines - numFlags : 0;
+  }, [mf, numFlags]);
+
+  const numDigitsToUse = useCallback(() => {
+    return targetConfig.size.x < 15 ? 3 : 4;
+  }, [targetConfig]);
 
   useEffect(() => {
-    if (numRevealed === 0) {
+    if (!hasExploded && !isSuccess && !showConfig && numRevealed === 0) {
       const set = new XYSet(mf.grid);
-      if (!logic) {
+      if (!currentConfig.isLogic) {
         revealAt(0, 0, set);
         revealAt(mf.grid.sx - 1, 0, set);
         revealAt(0, mf.grid.sy - 1, set);
@@ -91,27 +138,52 @@ function App() {
       }
       revealAt(Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2), set);
     }
-  }, [numRevealed, mf, revealAt]);
+  }, [hasExploded, isSuccess, showConfig, numRevealed, mf, revealAt,
+      currentConfig]);
 
   useEffect(() => {
-    if (numRevealed === mf.grid.sx * mf.grid.sy - mf.numMines) {
+    if (mf && numRevealed === mf.grid.sx * mf.grid.sy - mf.numMines) {
       setNumFlags(mf.numMines);
       setIsSuccess(true);
     }
   }, [numRevealed, setNumFlags, mf, setIsSuccess]);
 
+  useEffect(() => {
+    if (currentConfig !== targetConfig) {
+      setCurrentConfig(targetConfig);
+      setMf(createMinefield(targetConfig));
+      setNumFlags(0);
+      setHasExploded(false);
+      setIsSuccess(false);
+      setNumRevealed(0);
+      setStateGrid(' '.repeat(targetConfig.size.x * targetConfig.size.y));
+      resetTimer();
+    }
+  }, [currentConfig, setCurrentConfig, targetConfig, setMf, setNumFlags,
+      setHasExploded, setIsSuccess, setNumRevealed, setStateGrid, resetTimer]);
+
+  const applyConfig = (config) => {
+    setShowConfig(false);
+    if (validateConfig(config)) {
+      setConfigInStorage(config);
+      setTargetConfig({...config});
+    }
+  };
+
+  if (mf === null) return null;
+
   return (
     <div className='AppContainer'>
       <div className='App'>
         <div className='Top'>
-          <DigitBox value={mf.numMines - numFlags} numDigits={4} />
+          <DigitBox value={numMinesLeft()} numDigits={numDigitsToUse()} />
           <div className='CenterBox'>
             <FaceBox isWorried={isWorried}
                      hasExploded={hasExploded}
                      isSuccess={isSuccess}
-                     resetState={resetState} />
+                     setShowConfig={setShowConfig} />
           </div>
-          <DigitBox value={time} numDigits={4} />
+          <DigitBox value={time} numDigits={numDigitsToUse()} />
         </div>
         <div className='Bottom'>
           <Grid minefield={mf}
@@ -124,6 +196,14 @@ function App() {
                 revealAt={revealAt} />
         </div>
       </div>
+      <ConfigDialog open={showConfig}
+                    onApply={applyConfig}
+                    onCancel={() => setShowConfig(false)}
+                    sizeBounds={sizeBounds}
+                    calcNumMinesBounds={calcNumMinesBounds}
+                    validateSize={validateSize}
+                    validateNumMines={validateNumMines}
+                    config={targetConfig} />
     </div>);
 }
 

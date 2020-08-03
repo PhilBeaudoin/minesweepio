@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 function useTimer(start) {
 
@@ -17,7 +17,9 @@ function useTimer(start) {
     return () => clearInterval(interval.current);
   }, [isRunning, time]);
 
-  return [time, () => setTime(0), setIsRunning];
+  const resetTimer = useCallback(() => setTime(0), [setTime]);
+
+  return [time, resetTimer, setIsRunning];
 }
 
 export default useTimer;

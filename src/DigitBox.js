@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './DigitBox.css';
 
 function getPosX(val, digitPos) {
@@ -20,5 +21,10 @@ function DigitBox({ value, numDigits }) {
 
   return (<div className='DigitBox'>{digits}</div>);
 }
+
+DigitBox.propTypes = {
+  value: PropTypes.number.isRequired,
+  numDigits: PropTypes.number.isRequired
+};
 
 export default DigitBox;

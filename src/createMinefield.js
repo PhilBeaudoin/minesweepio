@@ -8,25 +8,30 @@ const mineDecayBase = 1/256;
 
 export function createLogicMinefield(sizeX, sizeY, startX, startY,
                                      numMines, rng) {
-  const mf = new Minefield(sizeX, sizeY, rng);
-  mf.start(startX, startY);
-
-  let mineDecay = mineDecayBase;
-  while(true) {
-    while(mf.boundary.size > 0) {
-      // If there are some unknowns, place 1 more mine so we have some
-      // freedom towards the end.
-      let mines = Math.max(0,
-          numMines - Math.floor(mineDecay) + (mf.numUnknowns > 0 ? 1 : 0));
-      if (mf.numUnknowns > 0) mines++;
-      mf.placeMinesOnBoundary(mines);
-      if(mf.boundary.size > 0)
-        mineDecay = mineDecayBase;
+  let mf;
+  do {
+    mf = new Minefield(sizeX, sizeY, rng);
+    mf.start(startX, startY);
+    let mineDecay = mineDecayBase;
+    let iter = 0;
+    while(iter < 500) {
+      ++iter;
+      while(mf.boundary.size > 0) {
+        // If there are some unknowns, place 1 more mine so we have some
+        // freedom towards the end.
+        let mines = Math.max(0,
+            numMines - Math.floor(mineDecay) +
+            Math.min(10, Math.floor(mf.numUnknowns / 5)));
+        if (mf.numUnknowns > 0) mines++;
+        mf.placeMinesOnBoundary(mines);
+        if(mf.boundary.size > 0)
+          mineDecay = mineDecayBase;
+      }
+      if (mf.isComplete()) break;
+      mf.backtrack();
+      mineDecay *= 2;
     }
-    if (mf.isComplete()) break;
-    mf.backtrack();
-    mineDecay *= 2;
-  }
+  } while (!mf.isComplete());
   return mf;
 }
 

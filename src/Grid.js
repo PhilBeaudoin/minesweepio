@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { isEventInside } from './utils.js';
 import './Grid.css';
 import XYSet from './XYSet';
@@ -181,5 +182,16 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
     </div>
   );
 }
+
+Grid.propTypes = {
+  minefield: PropTypes.object.isRequired,
+  setNumFlags: PropTypes.func.isRequired,
+  setIsWorried: PropTypes.func.isRequired,
+  hasExploded: PropTypes.bool.isRequired,
+  isSuccess: PropTypes.bool.isRequired,
+  getStateXY: PropTypes.func.isRequired,
+  setStateXY: PropTypes.func.isRequired,
+  revealAt: PropTypes.func.isRequired
+};
 
 export default Grid;
