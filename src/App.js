@@ -108,7 +108,7 @@ function App() {
 
   const restartBoard = useCallback(() => {
     setCurrentConfig(null);
-  });
+  }, [setCurrentConfig]);
 
   const revealAt = useCallback((x, y, set) => {
     const active = [[x, y]];

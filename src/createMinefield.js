@@ -16,7 +16,7 @@ export function createLogicMinefield(sizeX, sizeY, startX, startY,
     mf.start(startX, startY);
     let mineDecay = mineDecayBase;
     let iter = 0;
-    while(iter < 500) {
+    while(iter < 150) {
       ++iter;
       while(mf.boundary.size > 0) {
         // If there are some unknowns, place 1 more mine so we have some
@@ -33,6 +33,7 @@ export function createLogicMinefield(sizeX, sizeY, startX, startY,
       mf.backtrack();
       mineDecay *= 2;
     }
+    console.log('Number of iterations = ', iter);
   } while (!mf.isComplete());
   return mf;
 }

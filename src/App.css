@@ -1,7 +1,3 @@
-.Page {
-  background: #c0c0c0;
-}
-
 .AppContainer {
   display: flex;
   flex-direction: column;
