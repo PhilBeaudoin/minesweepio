@@ -181,6 +181,7 @@ function App() {
 
   return (
     <div className='AppContainer'>
+      <div className='AppSpacer' />
       <div className='App'>
         <div className='Top'>
           <DigitBox value={numMinesLeft()} numDigits={numDigitsToUse()} />
@@ -212,6 +213,7 @@ function App() {
                     validateSize={validateSize}
                     validateNumMines={validateNumMines}
                     config={targetConfig} />
+      <div className='AppSpacer' />
     </div>);
 }
 
