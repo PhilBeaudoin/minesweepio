@@ -106,6 +106,10 @@ function App() {
     });
   }, [mf]);
 
+  const restartBoard = useCallback(() => {
+    setCurrentConfig(null);
+  });
+
   const revealAt = useCallback((x, y, set) => {
     const active = [[x, y]];
     while (active.length > 0) {
@@ -184,6 +188,7 @@ function App() {
             <FaceBox isWorried={isWorried}
                      hasExploded={hasExploded}
                      isSuccess={isSuccess}
+                     restartBoard={restartBoard}
                      setShowConfig={setShowConfig} />
           </div>
           <DigitBox value={time} numDigits={numDigitsToUse()} />
