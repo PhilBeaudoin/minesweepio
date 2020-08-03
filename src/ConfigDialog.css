@@ -4,3 +4,7 @@
   margin: 22px;
   width: fit-content;
 }
+
+.Unselectable {
+  user-select: none;
+}

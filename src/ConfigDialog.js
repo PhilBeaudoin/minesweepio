@@ -13,15 +13,17 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
                       calcNumMinesBounds, validateSize, validateNumMines }) {
   const [ size, setSize ] = useState(config.size);
   const [ numMines, setNumMines ] = useState(config.numMines);
-  const [ isLogic, setIsLogic ] = useState(config.isLogic)
+  const [ isLogic, setIsLogic ] = useState(config.isLogic);
+  const [ revealCorners, setRevealCorners ] = useState(config.revealCorners);
 
   useEffect(() => {
     if (open) {
       setSize(config.size);
       setNumMines(config.numMines);
       setIsLogic(config.isLogic);
+      setRevealCorners(config.revealCorners);
     }
-  }, [open, setSize, setNumMines, setIsLogic, config]);
+  }, [open, setSize, setNumMines, setIsLogic, setRevealCorners, config]);
 
   const sizeText = useCallback(() => {
     return size.x + ' x ' + size.y;
@@ -79,7 +81,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     onApply({
       size,
       numMines: Number.parseInt(numMines),
-      isLogic: isLogic
+      isLogic: isLogic,
+      revealCorners: revealCorners && !isLogic
     });
   }
 
@@ -99,10 +102,10 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     <Dialog open={open}
             disableBackdropClick
             onClose={handleCancel} >
-      <DialogTitle id="simple-dialog-title">Minesweep.IO</DialogTitle>
+      <DialogTitle className='Unselectable'>Minesweep.IO</DialogTitle>
       <div className='Form'>
-        <TextField label="Size"
-                   variant="filled"
+        <TextField label='Size'
+                   variant='filled'
                    value={rawSize}
                    onChange={e => setRawSize(e.target.value)}
                    onFocus={selectTextOnFocus}
@@ -110,26 +113,32 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
                    error={parseRawSize() === false}
                    helperText={sizeErrorText()}
                  />
-        <TextField label="Number of mines"
-                   variant="filled"
+        <TextField label='Number of mines'
+                   variant='filled'
                    value={numMines}
                    onChange={e => setNumMines(e.target.value)}
                    onFocus={selectTextOnFocus}
                    error={errorInNumMines()}
                    helperText={numMinesErrorText()}
                  />
-        <FormControlLabel
+        <FormControlLabel className='Unselectable'
           control={<Checkbox/>}
           checked={isLogic}
           onChange={e => setIsLogic(e.target.checked)}
-          label="Always logical" />
+          label='Always logical' />
+        <FormControlLabel className='Unselectable'
+          control={<Checkbox/>}
+          disabled={isLogic}
+          checked={revealCorners && !isLogic}
+          onChange={e => setRevealCorners(e.target.checked)}
+          label='Reveal corners' />
       </div>
       <DialogActions>
-        <Button onClick={handleCancel} color="primary">
+        <Button onClick={handleCancel} color='primary'>
           Cancel
         </Button>
         <Button onClick={handleApply}
-                color="primary"
+                color='primary'
                 disabled={anyError()}>
           Restart
         </Button>
@@ -162,7 +171,8 @@ ConfigDialog.propTypes = {
       y: PropTypes.number.isRequired
     }),
     numMines: PropTypes.number.isRequired,
-    isLogic: PropTypes.bool.isRequired
+    isLogic: PropTypes.bool.isRequired,
+    revealCorners: PropTypes.bool.isRequired
   })
 };
 

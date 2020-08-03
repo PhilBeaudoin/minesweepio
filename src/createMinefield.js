@@ -7,7 +7,9 @@ import XYSet from './XYSet';
 const mineDecayBase = 1/256;
 
 export function createLogicMinefield(sizeX, sizeY, startX, startY,
-                                     numMines, rng) {
+                                     numMines, revealCorners, rng) {
+  if (revealCorners)
+    console.log('Error! Cannot reveal corners in a logic minefield.');
   let mf;
   do {
     mf = new Minefield(sizeX, sizeY, rng);
@@ -36,14 +38,16 @@ export function createLogicMinefield(sizeX, sizeY, startX, startY,
 }
 
 export function createRandomMinefield(sizeX, sizeY, startX, startY,
-                                      numMines, rng) {
+                                      numMines, revealCorners, rng) {
   const mf = new Minefield(sizeX, sizeY, rng);
 
   const setToIgnore = new XYSet(mf.grid);
-  setToIgnore.add(0, 0);
-  setToIgnore.add(sizeX - 1, 0);
-  setToIgnore.add(0, sizeY - 1);
-  setToIgnore.add(sizeX - 1, sizeY - 1);
+  if (revealCorners) {
+    setToIgnore.add(0, 0);
+    setToIgnore.add(sizeX - 1, 0);
+    setToIgnore.add(0, sizeY - 1);
+    setToIgnore.add(sizeX - 1, sizeY - 1);
+  }
   mf.grid.forCellsInRing(startX, startY, 1, (x, y) => setToIgnore.add(x, y));
   mf.placeMinesRandomly(numMines, setToIgnore);
 

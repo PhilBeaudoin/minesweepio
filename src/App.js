@@ -15,7 +15,8 @@ const rng = new alea(seed);
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
   'numMines': 10,
-  'isLogic': false
+  'isLogic': false,
+  'revealCorners': false
 };
 
 const sizeBounds = { min: {x: 9, y: 9}, max: {x: 59, y: 30} }
@@ -43,7 +44,9 @@ function validateNumMines(numMines, size) {
 function validateConfig(config) {
   return validateSize(config.size) &&
          validateNumMines(config.numMines, config.size) &&
-         typeof(config.isLogic) === 'boolean';
+         typeof(config.isLogic) === 'boolean' &&
+         typeof(config.revealCorners) === 'boolean' &&
+         !(config.isLogic && config.revealCorners);
 }
 
 const configVarName = 'config';
@@ -64,7 +67,7 @@ function createMinefield(config) {
   const func = config.isLogic ? createLogicMinefield : createRandomMinefield;
   return func(config.size.x, config.size.y,
               Math.floor(config.size.x/2), Math.floor(config.size.y/2),
-              config.numMines, rng);
+              config.numMines, config.revealCorners, rng);
 }
 
 function App() {
@@ -130,7 +133,7 @@ function App() {
   useEffect(() => {
     if (!hasExploded && !isSuccess && !showConfig && numRevealed === 0) {
       const set = new XYSet(mf.grid);
-      if (!currentConfig.isLogic) {
+      if (currentConfig.revealCorners) {
         revealAt(0, 0, set);
         revealAt(mf.grid.sx - 1, 0, set);
         revealAt(0, mf.grid.sy - 1, set);
