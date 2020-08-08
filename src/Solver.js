@@ -10,7 +10,7 @@ class Solver {
     this.cachedDeductions = [];
     this.startX = startX;
     this.startY = startY;
-    this.minProb = minProb === undefined ? 0 : minProb;
+    this.minProb = (minProb === undefined) ? 0 : minProb;
   }
 
   start() {

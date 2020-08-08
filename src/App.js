@@ -85,7 +85,7 @@ function createMinefield(config) {
       (x, y) => setToIgnore.add(x, y));
   if (config.isLogic || config.hasNoFiftyFifty) {
     mf.placeMinesLogically(center.x, center.y, config.numMines, setToIgnore,
-                           config.hasNoFiftyFifty);
+                           !config.isLogic);
   } else {
     mf.placeMinesRandomly(config.numMines, setToIgnore);
   }
