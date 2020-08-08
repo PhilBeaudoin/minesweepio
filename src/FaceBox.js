@@ -55,6 +55,7 @@ function FaceBox({ isWorried, hasExploded, isSuccess,
 }
 
 FaceBox.propTypes = {
+  mfComplete: PropTypes.bool.isRequired,
   isWorried: PropTypes.bool.isRequired,
   hasExploded: PropTypes.bool.isRequired,
   isSuccess: PropTypes.bool.isRequired,

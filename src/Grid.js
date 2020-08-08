@@ -12,7 +12,7 @@ function containsOnlyCell(cellList, x, y) {
   return cellList.length === 1 && cellList[0][0] === x && cellList[0][1] === y;
 }
 
-function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
+function Grid({minefield:mf, mfComplete, setNumFlags, setIsWorried, hasExploded,
                isSuccess, getStateXY, setStateXY, revealAt}) {
 
   const [ capturedElem, setCapturedElem ] = useState(null);
@@ -54,11 +54,7 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
       return '-160px';
     let digit = parseInt(val);
     if (Number.isNaN(digit) || digit < 0 || digit > 8) {
-      //console.log('Error! Cell has neither a mine nor a valid digit.', val);
-      if (val === '#') return '-64px';
-      if (val === 'B') return '-96px';
-      if (val === 'N') return '-128px';
-      if (val === '.') return '-32px';
+      console.log('Error! Cell has neither a mine nor a valid digit.', val);
       return '0px';
     }
     return -(192 + 32 * digit) + 'px';
@@ -70,7 +66,7 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
       e.target.setPointerCapture(e.pointerId);
       setCapturedElem(e.target);
 
-      if (hasExploded || isSuccess) return;
+      if (hasExploded || isSuccess || !mfComplete) return;
 
       const state = getStateXY(x, y);
       if (e.buttons === 1 && isRevealable(state)) {
@@ -89,7 +85,7 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
       }
     }
   }, [hasExploded, isSuccess, getStateXY, setIsWorried, setIsInside,
-      setCapturedElem, setStateXY, setNumFlags]);
+      setCapturedElem, setStateXY, setNumFlags, mfComplete]);
 
   const pointerUp = useCallback((x, y) => {
     return (e) => {
@@ -130,7 +126,8 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
       // Sometimes pointerDown gets eaten. Fix this by calling pointerDown
       // if we're moving with buttons down but nothing is captured.
       if (e.buttons !== 0 && capturedElem === null) pointerDown(x, y)(e);
-      if (capturedElem !== e.target || hasExploded || isSuccess) return;
+      if (capturedElem !== e.target || hasExploded || isSuccess || !mfComplete)
+        return;
       const inside = isEventInside(e, e.target);
       if (revealedXYs.length > 0) {
         setIsWorried(inside);
@@ -158,7 +155,7 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
       setIsInside(inside);
     }
   }, [capturedElem, getStateXY, setStateXY, hasExploded, isSuccess, mf.grid,
-      pointerDown, revealedXYs, setIsWorried, isInside]);
+      pointerDown, revealedXYs, setIsWorried, isInside, mfComplete]);
 
   const renderCell = useCallback((y) => {
     return (state, x) => {
@@ -185,6 +182,7 @@ function Grid({minefield:mf, setNumFlags, setIsWorried, hasExploded,
 
 Grid.propTypes = {
   minefield: PropTypes.object.isRequired,
+  mfComplete: PropTypes.bool.isRequired,
   setNumFlags: PropTypes.func.isRequired,
   setIsWorried: PropTypes.func.isRequired,
   hasExploded: PropTypes.bool.isRequired,

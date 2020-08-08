@@ -4,11 +4,14 @@ import useTimer from './useTimer';
 import DigitBox from './DigitBox';
 import FaceBox from './FaceBox';
 import Grid from './Grid';
-import { createLogicMinefield, createRandomMinefield } from './createMinefield';
+import ProgressBar from './ProgressBar';
 import XYSet from './XYSet';
 import { alea } from 'seedrandom';
 import ConfigDialog from './ConfigDialog';
+import Minefield from './Minefield';
+import Solver from './Solver';
 
+const autosolve = false;
 const seed = Math.random();
 const rng = new alea(seed);
 
@@ -58,16 +61,48 @@ function getConfigFromStorage() {
   localStorage.clear();
   return defaultConfig;
 }
+
 function setConfigInStorage(config) {
   if (validateConfig(config))
     localStorage.setItem(configVarName, JSON.stringify(config));
 }
 
+function createRandomMinefield(config) {
+  const center = {
+    x: Math.floor(config.size.x/2),
+    y: Math.floor(config.size.y/2),
+  }
+  const mf = new Minefield(config.size.x, config.size.y, rng);
+
+  const setToIgnore = new XYSet(mf.grid);
+  if (config.revealCorners) {
+    setToIgnore.add(0, 0);
+    setToIgnore.add(config.size.x - 1, 0);
+    setToIgnore.add(0, config.size.y - 1);
+    setToIgnore.add(config.size.x - 1, config.size.y - 1);
+  }
+  mf.grid.forCellsInRing(center.x, center.y, 1,
+      (x, y) => setToIgnore.add(x, y));
+  mf.placeMinesRandomly(config.numMines, setToIgnore);
+
+  return mf;
+}
+
+function createLogicMinefield(config) {
+  const center = {
+    x: Math.floor(config.size.x/2),
+    y: Math.floor(config.size.y/2),
+  }
+  if (config.revealCorners)
+    console.log('Error! Cannot reveal corners in a logic minefield.');
+  const mf = new Minefield(config.size.x, config.size.y, rng);
+  mf.placeMinesLogically(center.x, center.y, config.numMines);
+  return mf;
+}
+
 function createMinefield(config) {
   const func = config.isLogic ? createLogicMinefield : createRandomMinefield;
-  return func(config.size.x, config.size.y,
-              Math.floor(config.size.x/2), Math.floor(config.size.y/2),
-              config.numMines, config.revealCorners, rng);
+  return func(config);
 }
 
 function App() {
@@ -78,6 +113,8 @@ function App() {
 
   // Board state
   const [ mf, setMf ] = useState(null);
+  const [ mfComplete, setMfComplete ] = useState(false);
+  const [ mfCompletionPercent, setMfCompletionPercent ] = useState(0);
   const [ numFlags, setNumFlags ] = useState(null);
   const [ hasExploded, setHasExploded ] = useState(null);
   const [ isSuccess, setIsSuccess ] = useState(null);
@@ -92,8 +129,8 @@ function App() {
   const [ showConfig, setShowConfig ] = useState(false);
 
   useEffect(() => {
-    setTimerRunning(!hasExploded && !isSuccess && !showConfig);
-  }, [setTimerRunning, hasExploded, isSuccess, showConfig]);
+    setTimerRunning(!hasExploded && !isSuccess && !showConfig && mfComplete);
+  }, [setTimerRunning, hasExploded, isSuccess, showConfig, mfComplete]);
 
   const getStateXY = useCallback((x, y) => {
     return stateGrid[y * mf.grid.sx + x];
@@ -127,26 +164,44 @@ function App() {
   }, [mf, getStateXY, setStateXY, setHasExploded]);
 
   const numMinesLeft = useCallback(() => {
-    return mf ? mf.numMines - numFlags : 0;
-  }, [mf, numFlags]);
+    return (mf && mfComplete) ? mf.numMines - numFlags : 0;
+  }, [mf, mfComplete, numFlags]);
 
   const numDigitsToUse = useCallback(() => {
     return targetConfig.size.x < 15 ? 3 : 4;
   }, [targetConfig]);
 
   useEffect(() => {
-    if (!hasExploded && !isSuccess && !showConfig && numRevealed === 0) {
-      const set = new XYSet(mf.grid);
-      if (currentConfig.revealCorners) {
-        revealAt(0, 0, set);
-        revealAt(mf.grid.sx - 1, 0, set);
-        revealAt(0, mf.grid.sy - 1, set);
-        revealAt(mf.grid.sx - 1, mf.grid.sy - 1, set);
+    if (!hasExploded && !isSuccess && !showConfig && numRevealed === 0 &&
+        mfComplete) {
+      if (!autosolve) {
+        const set = new XYSet(mf.grid);
+        if (currentConfig.revealCorners) {
+          revealAt(0, 0, set);
+          revealAt(mf.grid.sx - 1, 0, set);
+          revealAt(0, mf.grid.sy - 1, set);
+          revealAt(mf.grid.sx - 1, mf.grid.sy - 1, set);
+        }
+        revealAt(Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2), set);
+      } else {
+        const solver =
+            new Solver(mf, Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2));
+        solver.start();
+        solver.grid.forEachXYVal((x, y, val) => {
+          if (val.deducted) {
+            if (mf.grid.getXY(x, y) === '*') {
+              setNumFlags(f => f + 1);
+              setStateXY(x, y, 'f');
+            } else {
+              setNumRevealed(num => num + 1);
+              setStateXY(x, y, '.');
+            }
+          }
+        });
       }
-      revealAt(Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2), set);
     }
   }, [hasExploded, isSuccess, showConfig, numRevealed, mf, revealAt,
-      currentConfig]);
+      currentConfig, setStateXY, mfComplete]);
 
   useEffect(() => {
     if (mf && numRevealed === mf.grid.sx * mf.grid.sy - mf.numMines) {
@@ -159,6 +214,7 @@ function App() {
     if (currentConfig !== targetConfig) {
       setCurrentConfig(targetConfig);
       setMf(createMinefield(targetConfig));
+      setMfComplete(false);
       setNumFlags(0);
       setHasExploded(false);
       setIsSuccess(false);
@@ -168,6 +224,25 @@ function App() {
     }
   }, [currentConfig, setCurrentConfig, targetConfig, setMf, setNumFlags,
       setHasExploded, setIsSuccess, setNumRevealed, setStateGrid, resetTimer]);
+
+  useEffect(() => {
+    if (mf) {
+      setMfComplete(mf.isComplete());
+      if (!mf.isComplete()) {
+        const advance = () => {
+          for(let i = 0; i < 10 && !mf.isComplete(); ++i)
+            mf.continueBuilding();
+          setMfCompletionPercent(
+              mf.solver.numDeducted / (mf.grid.sx * mf.grid.sy));
+          if (mf.isComplete())
+            setMfComplete(true);
+          else
+            setTimeout(advance);
+        }
+        advance();
+      }
+    }
+  }, [mf, setMfCompletionPercent]);
 
   const applyConfig = (config) => {
     setShowConfig(false);
@@ -186,7 +261,8 @@ function App() {
         <div className='Top'>
           <DigitBox value={numMinesLeft()} numDigits={numDigitsToUse()} />
           <div className='CenterBox'>
-            <FaceBox isWorried={isWorried}
+            <FaceBox mfComplete={mfComplete}
+                     isWorried={isWorried}
                      hasExploded={hasExploded}
                      isSuccess={isSuccess}
                      restartBoard={restartBoard}
@@ -196,6 +272,7 @@ function App() {
         </div>
         <div className='Bottom'>
           <Grid minefield={mf}
+                mfComplete={mfComplete}
                 setNumFlags={setNumFlags}
                 setIsWorried={setIsWorried}
                 hasExploded={hasExploded}
@@ -205,6 +282,8 @@ function App() {
                 revealAt={revealAt} />
         </div>
       </div>
+      <ProgressBar open={!mfComplete}
+                   percent={mfCompletionPercent} />
       <ConfigDialog open={showConfig}
                     onApply={applyConfig}
                     onCancel={() => setShowConfig(false)}

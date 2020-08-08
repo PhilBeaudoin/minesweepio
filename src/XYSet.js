@@ -23,6 +23,16 @@ class XYSet {
   forEachXYKey(func) {
     this.set.forEach(key => func(...this.grid.fromKey(key), key));
   }
+  *entriesKey() {
+    const entries = this.set.entries();
+    for (const entry of entries)
+      yield entry[0];
+  }
+  *entriesXY() {
+    const entries = this.set.entries();
+    for (const entry of entries)
+      yield this.grid.fromKey(entry[0]);
+  }
 
   // Private utility function
   select(args, f1, f2) { return args.length === 1 ? f1(...args) : f2(...args); }
