@@ -10,6 +10,7 @@ class Minefield {
     this.solver = null;
     this.targetNumMines = -1;
     this.buildingIterator = null;
+    this.initialSetToIgnore = null;
   }
 
   isComplete() {
@@ -50,12 +51,15 @@ class Minefield {
     });
   }
 
-  placeMinesLogically(x, y, targetNumMines) {
-    this.solver = new Solver(this, x, y);
+  placeMinesLogically(x, y, targetNumMines, initialSetToIgnore, allowRandom) {
+    this.solver = new Solver(this, x, y, allowRandom ? 0.49 : 0);
     this.targetNumMines = targetNumMines;
 
+    this.initialSetToIgnore = initialSetToIgnore;
+    this.grid.forCellsInRing(x, y, 1,
+        (xx, yy) => this.initialSetToIgnore.add(xx, yy));
     const setToIgnore = new XYSet(this.grid);
-    this.grid.forCellsInRing(x, y, 1, (xx, yy) => setToIgnore.add(xx, yy));
+    setToIgnore.addFromSet(this.initialSetToIgnore);
     this.placeMinesRandomly(targetNumMines, setToIgnore);
     this.buildingIterator = this.logicalPlacerIterator();
   }
@@ -76,6 +80,7 @@ class Minefield {
       // Clear undeducted cells, compute number of mines to place
       let minesToPlace = this.targetNumMines;
       const setToIgnore = new XYSet(this.grid);
+      setToIgnore.addFromSet(this.initialSetToIgnore);
       this.solver.grid.forEachXYVal((xx, yy, solverVal) => {
         if (solverVal.deducted) {
           const val = this.grid.getXY(xx, yy);

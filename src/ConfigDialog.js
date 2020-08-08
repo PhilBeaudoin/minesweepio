@@ -14,6 +14,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const [ size, setSize ] = useState(config.size);
   const [ numMines, setNumMines ] = useState(config.numMines);
   const [ isLogic, setIsLogic ] = useState(config.isLogic);
+  const [ hasNoFiftyFifty, setHasNoFiftyFifty ] =
+      useState(config.hasNoFiftyFifty);
   const [ revealCorners, setRevealCorners ] = useState(config.revealCorners);
 
   useEffect(() => {
@@ -21,9 +23,11 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       setSize(config.size);
       setNumMines(config.numMines);
       setIsLogic(config.isLogic);
+      setHasNoFiftyFifty(config.hasNoFiftyFifty);
       setRevealCorners(config.revealCorners);
     }
-  }, [open, setSize, setNumMines, setIsLogic, setRevealCorners, config]);
+  }, [open, setSize, setNumMines, setIsLogic, setHasNoFiftyFifty,
+      setRevealCorners, config]);
 
   const sizeText = useCallback(() => {
     return size.x + ' x ' + size.y;
@@ -82,7 +86,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       size,
       numMines: Number.parseInt(numMines),
       isLogic: isLogic,
-      revealCorners: revealCorners && !isLogic
+      hasNoFiftyFifty: hasNoFiftyFifty,
+      revealCorners: revealCorners
     });
   }
 
@@ -129,7 +134,12 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
         <FormControlLabel className='Unselectable'
           control={<Checkbox/>}
           disabled={isLogic}
-          checked={revealCorners && !isLogic}
+          checked={hasNoFiftyFifty || isLogic}
+          onChange={e => setHasNoFiftyFifty(e.target.checked)}
+          label='Reduce bad luck™' />
+        <FormControlLabel className='Unselectable'
+          control={<Checkbox/>}
+          checked={revealCorners}
           onChange={e => setRevealCorners(e.target.checked)}
           label='Reveal corners' />
       </div>
@@ -172,6 +182,7 @@ ConfigDialog.propTypes = {
     }),
     numMines: PropTypes.number.isRequired,
     isLogic: PropTypes.bool.isRequired,
+    hasNoFiftyFifty: PropTypes.bool.isRequired,
     revealCorners: PropTypes.bool.isRequired
   })
 };

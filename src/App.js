@@ -19,6 +19,7 @@ const defaultConfig = {
   'size': {x: 9, y: 9} ,
   'numMines': 10,
   'isLogic': false,
+  'hasNoFiftyFifty': false,
   'revealCorners': false
 };
 
@@ -48,8 +49,8 @@ function validateConfig(config) {
   return validateSize(config.size) &&
          validateNumMines(config.numMines, config.size) &&
          typeof(config.isLogic) === 'boolean' &&
-         typeof(config.revealCorners) === 'boolean' &&
-         !(config.isLogic && config.revealCorners);
+         typeof(config.hasNoFiftyFifty) === 'boolean' &&
+         typeof(config.revealCorners) === 'boolean';
 }
 
 const configVarName = 'config';
@@ -67,13 +68,12 @@ function setConfigInStorage(config) {
     localStorage.setItem(configVarName, JSON.stringify(config));
 }
 
-function createRandomMinefield(config) {
+function createMinefield(config) {
   const center = {
     x: Math.floor(config.size.x/2),
     y: Math.floor(config.size.y/2),
   }
   const mf = new Minefield(config.size.x, config.size.y, rng);
-
   const setToIgnore = new XYSet(mf.grid);
   if (config.revealCorners) {
     setToIgnore.add(0, 0);
@@ -83,26 +83,14 @@ function createRandomMinefield(config) {
   }
   mf.grid.forCellsInRing(center.x, center.y, 1,
       (x, y) => setToIgnore.add(x, y));
-  mf.placeMinesRandomly(config.numMines, setToIgnore);
-
-  return mf;
-}
-
-function createLogicMinefield(config) {
-  const center = {
-    x: Math.floor(config.size.x/2),
-    y: Math.floor(config.size.y/2),
+  if (config.isLogic || config.hasNoFiftyFifty) {
+    mf.placeMinesLogically(center.x, center.y, config.numMines, setToIgnore,
+                           config.hasNoFiftyFifty);
+  } else {
+    mf.placeMinesRandomly(config.numMines, setToIgnore);
   }
-  if (config.revealCorners)
-    console.log('Error! Cannot reveal corners in a logic minefield.');
-  const mf = new Minefield(config.size.x, config.size.y, rng);
-  mf.placeMinesLogically(center.x, center.y, config.numMines);
-  return mf;
-}
 
-function createMinefield(config) {
-  const func = config.isLogic ? createLogicMinefield : createRandomMinefield;
-  return func(config);
+  return mf
 }
 
 function App() {

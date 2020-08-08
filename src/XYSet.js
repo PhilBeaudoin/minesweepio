@@ -23,6 +23,9 @@ class XYSet {
   forEachXYKey(func) {
     this.set.forEach(key => func(...this.grid.fromKey(key), key));
   }
+  addFromSet(other) {
+    other.forEachKey(key => this.add(key));
+  }
   *entriesKey() {
     const entries = this.set.entries();
     for (const entry of entries)

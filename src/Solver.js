@@ -3,13 +3,14 @@ import Grid2d from './Grid2d'
 import XYSet from './XYSet'
 
 class Solver {
-  constructor(mf, startX, startY) {
+  constructor(mf, startX, startY, minProb) {
     this.mf = mf;
     this.grid = null;
     this.numDeducted = 0;
     this.cachedDeductions = [];
     this.startX = startX;
     this.startY = startY;
+    this.minProb = minProb === undefined ? 0 : minProb;
   }
 
   start() {
@@ -61,6 +62,14 @@ class Solver {
           if (prevNumDeducted !== this.numDeducted) break;
         }
       }
+
+      if (prevNumDeducted === this.numDeducted) {
+        entries = clues.entriesXY();
+        for (const xy of entries) {
+          this.tryToDeductProb(...xy, clues)
+          if (prevNumDeducted !== this.numDeducted) break;
+        }
+      }
     }
   }
 
@@ -70,7 +79,8 @@ class Solver {
       return;
     }
     if (val.unknownMines === 0 ||
-        val.unknownMines === val.remainingUnknowns) {
+        val.unknownMines === val.remainingUnknowns ||
+        val.unknownMines / val.remainingUnknowns < this.minProb) {
       this.cachedDeductions.push(this.tryToDeductAround.bind(this, x, y));
       this.setDeductedAround(x, y, clues);
     }
@@ -111,6 +121,23 @@ class Solver {
     if (success) {
       this.cachedDeductions.push(
           this.tryToDeductForPair.bind(this, x1, y1, x2, y2));
+    }
+  }
+
+  tryToDeductProb(x, y, clues) {
+    const val = this.grid.getXY(x, y);
+    if (this.minProb === 0 || !val.deducted) {
+      return;
+    }
+    if (val.unknownMines / val.remainingUnknowns < this.minProb) {
+      let chosen = {x: 0, y: 0, mvVal:-1};
+      this.grid.forEachNeighbor(x, y, (xx, yy) => {
+        const mfVal = this.mf.grid.get(x, y);
+        if (Number.isInteger(mfVal) && mfVal > chosen.mfVal) {
+          chosen = {x: xx, y: yy, mfVal};
+        }
+      });
+      this.setDeductedAround(chosen.x, chosen.y, clues);
     }
   }
 
