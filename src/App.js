@@ -14,6 +14,7 @@ import Solver from './Solver';
 const autosolve = false;
 const seed = Math.random();
 const rng = new alea(seed);
+const version = 'v 0.2 (beta)';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -279,7 +280,8 @@ function App() {
                     calcNumMinesBounds={calcNumMinesBounds}
                     validateSize={validateSize}
                     validateNumMines={validateNumMines}
-                    config={targetConfig} />
+                    config={targetConfig}
+                    version={version} />
       <div className='AppSpacer' />
     </div>);
 }

@@ -7,10 +7,12 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
+import Typography from '@material-ui/core/Typography';
 import './ConfigDialog.css';
 
 function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
-                      calcNumMinesBounds, validateSize, validateNumMines }) {
+                      calcNumMinesBounds, validateSize, validateNumMines,
+                      version }) {
   const [ size, setSize ] = useState(config.size);
   const [ numMines, setNumMines ] = useState(config.numMines);
   const [ isLogic, setIsLogic ] = useState(config.isLogic);
@@ -107,7 +109,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     <Dialog open={open}
             disableBackdropClick
             onClose={handleCancel} >
-      <DialogTitle className='Unselectable'>Minesweep.IO</DialogTitle>
+      <DialogTitle className='Unselectable'>Minesweep.IO
+      <Typography className='Unselectable' variant='subtitle2'>{version}</Typography></DialogTitle>
       <div className='Form'>
         <TextField label='Size'
                    variant='filled'
@@ -184,7 +187,8 @@ ConfigDialog.propTypes = {
     isLogic: PropTypes.bool.isRequired,
     hasNoFiftyFifty: PropTypes.bool.isRequired,
     revealCorners: PropTypes.bool.isRequired
-  })
+  }),
+  version: PropTypes.string.isRequired
 };
 
 export default ConfigDialog;
