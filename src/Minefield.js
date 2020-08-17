@@ -62,11 +62,21 @@ class Minefield {
                           '?*?',
                           '?#?',
                           '***']),
+      Pattern.fromString(['***',
+                          '?*?',
+                          '?#?',
+                          '???',
+                          '?*?',
+                          '?#?',
+                          '***']),
     ];
     patterns.push(patterns[0].rotate90cw());
     patterns.push(patterns[1].rotate90cw());
     patterns.push(patterns[1].rotate90cw().rotate90cw());
     patterns.push(patterns[1].rotate90cw().rotate90cw().rotate90cw());
+    patterns.push(patterns[2].rotate90cw());
+    patterns.push(patterns[2].rotate90cw().rotate90cw());
+    patterns.push(patterns[2].rotate90cw().rotate90cw().rotate90cw());
 
     let badGrid = true;
     this.placeMinesRandomly(totalMines, setToIgnore);
