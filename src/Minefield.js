@@ -1,5 +1,6 @@
 import Solver from './Solver'
 import Grid2d from './Grid2d'
+import Pattern from './Pattern'
 import XYSet from './XYSet'
 
 class Minefield {
@@ -51,8 +52,41 @@ class Minefield {
     });
   }
 
-  placeMinesLogically(x, y, targetNumMines, initialSetToIgnore, allowRandom) {
-    this.solver = new Solver(this, x, y, allowRandom ? 0.49 : 0);
+  placeMinesNoBadPattern(totalMines, setToIgnore) {
+    let patterns = [
+      Pattern.fromString(['*??*',
+                          '?*#?',
+                          '?#*?',
+                          '*??*']),
+      Pattern.fromString(['***',
+                          '?*?',
+                          '?#?',
+                          '***']),
+    ];
+    patterns.push(patterns[0].rotate90cw().rotate90cw());
+    patterns.push(patterns[1].rotate90cw());
+    patterns.push(patterns[1].rotate90cw().rotate90cw());
+    patterns.push(patterns[1].rotate90cw().rotate90cw().rotate90cw());
+
+    let badGrid = true;
+    this.placeMinesRandomly(totalMines, setToIgnore);
+    while(badGrid) {
+      badGrid = false;
+      for (let i = 0; i < patterns.length; ++i) {
+        const patternPos = patterns[i].findInGrid(this.grid);
+        if (patternPos !== false) {
+          badGrid = true;
+          const [x, y] = patternPos;
+          this.shuffleMinesInSquare(x - 2, y - 2,
+              x + patterns[i].grid.sx + 2, y + patterns[i].grid.sy + 2,
+              setToIgnore);
+        }
+      }
+    }
+  }
+
+  placeMinesLogically(x, y, targetNumMines, initialSetToIgnore) {
+    this.solver = new Solver(this, x, y);
     this.targetNumMines = targetNumMines;
 
     this.initialSetToIgnore = initialSetToIgnore;
@@ -121,6 +155,30 @@ class Minefield {
 
   countMinesAroundXY(x, y) {
     return this.grid.countAroundXYIf(x, y, val => val === '*');
+  }
+
+  shuffleMinesInSquare(x1, y1, x2, y2, setToIgnore) {
+    x1 = Math.max(0, x1);
+    y1 = Math.max(0, y1);
+    x2 = Math.min(this.grid.sx, x2);
+    y2 = Math.min(this.grid.sy, y2);
+
+    let mineCount = 0;
+    var set = new XYSet(this.grid);
+    for (let x = x1; x < x2; ++x) {
+      for (let y = y1; y < y2; ++y) {
+        if (this.grid.getXY(x, y) === '*') mineCount++;
+        this.grid.setXY(x, y, '?');
+        if (!setToIgnore.has(x, y))
+          set.addXY(x, y);
+      }
+    }
+    set.randomSubset(mineCount, this.rng).forEachXY(
+        (x, y) => this.grid.setXY(x, y, '*'));
+    this.grid.forEachXYVal((x, y, val) => {
+      if (val !== '*')
+        this.grid.setXY(x, y, this.countMinesAroundXY(x, y));
+    });
   }
 }
 

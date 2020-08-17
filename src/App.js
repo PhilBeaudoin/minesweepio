@@ -14,7 +14,7 @@ import Solver from './Solver';
 const autosolve = false;
 const seed = Math.random();
 const rng = new alea(seed);
-const version = 'v 0.2 (beta)';
+const version = 'v 0.3 (beta)';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -84,9 +84,10 @@ function createMinefield(config) {
   }
   mf.grid.forCellsInRing(center.x, center.y, 1,
       (x, y) => setToIgnore.add(x, y));
-  if (config.isLogic || config.hasNoFiftyFifty) {
-    mf.placeMinesLogically(center.x, center.y, config.numMines, setToIgnore,
-                           !config.isLogic);
+  if (config.isLogic) {
+    mf.placeMinesLogically(center.x, center.y, config.numMines, setToIgnore);
+  } else if (config.hasNoFiftyFifty) {
+    mf.placeMinesNoBadPattern(config.numMines, setToIgnore);
   } else {
     mf.placeMinesRandomly(config.numMines, setToIgnore);
   }

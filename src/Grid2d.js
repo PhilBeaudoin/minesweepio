@@ -36,6 +36,12 @@ class Grid2d {
       for (let x = 0; x < this.sx; ++x)
         func(x, y, this.getXY(x, y));
   }
+  allXYVal(func) {
+    for (let y = 0; y < this.sy; ++y)
+      for (let x = 0; x < this.sx; ++x)
+        if (!func(x, y, this.getXY(x, y))) return false;
+    return true;
+  }
 
   ///////////////////////////////////////////////////////////////////////
   // Methods to convert a coord to a unique key for hashing
@@ -84,6 +90,20 @@ class Grid2d {
       (xx, yy) => count += countIf(this.getXY(xx, yy)) ? 1 : 0);
     return count;
   }
+
+  ///////////////////////////////////////////////////////////////////////
+  // Logging & Debugging
+  toString() {
+    let out = '';
+    for (let y = 0; y < this.sy; ++y) {
+      for (let x = 0; x < this.sx; ++x) {
+        out += this.getXY(x, y);
+      }
+      out += '\n';
+    }
+    return out;
+  }
+
 }
 
 export default Grid2d;
