@@ -14,7 +14,7 @@ import Solver from './Solver';
 const autosolve = false;
 const seed = Math.random();
 const rng = new alea(seed);
-const version = 'v 0.3 (beta)';
+const version = 'v 0.4 (beta)';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,

@@ -63,7 +63,7 @@ class Minefield {
                           '?#?',
                           '***']),
     ];
-    patterns.push(patterns[0].rotate90cw().rotate90cw());
+    patterns.push(patterns[0].rotate90cw());
     patterns.push(patterns[1].rotate90cw());
     patterns.push(patterns[1].rotate90cw().rotate90cw());
     patterns.push(patterns[1].rotate90cw().rotate90cw().rotate90cw());
