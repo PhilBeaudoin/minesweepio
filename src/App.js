@@ -12,16 +12,16 @@ import Minefield from './Minefield';
 import Solver from './Solver';
 
 const autosolve = false;
-const seed = Math.random();
-let rng = new alea(seed);
-const version = 'v 0.5 (beta)';
+const maxSeed = 1000000;
+const version = 'v 0.6 (beta)';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
   'numMines': 10,
   'isLogic': false,
   'hasNoFiftyFifty': false,
-  'revealCorners': false
+  'revealCorners': false,
+  'manualSeed': false
 };
 
 const sizeBounds = { min: {x: 9, y: 9}, max: {x: 59, y: 30} }
@@ -51,13 +51,15 @@ function validateConfig(config) {
          validateNumMines(config.numMines, config.size) &&
          typeof(config.isLogic) === 'boolean' &&
          typeof(config.hasNoFiftyFifty) === 'boolean' &&
-         typeof(config.revealCorners) === 'boolean';
+         typeof(config.revealCorners) === 'boolean' &&
+         typeof(config.manualSeed) === 'boolean';
 }
 
 const configVarName = 'config';
 function getConfigFromStorage() {
   try {
     const config = JSON.parse(localStorage.getItem(configVarName));
+    config.seed = Math.floor(Math.random() * maxSeed) / maxSeed;;
     if (validateConfig(config)) return config;
   } catch(err) {}
   localStorage.clear();
@@ -74,6 +76,7 @@ function createMinefield(config) {
     x: Math.floor(config.size.x/2),
     y: Math.floor(config.size.y/2),
   }
+  const rng = new alea(config.seed);
   const mf = new Minefield(config.size.x, config.size.y, rng);
   const setToIgnore = new XYSet(mf.grid);
   if (config.revealCorners) {
@@ -236,8 +239,7 @@ function App() {
 
   const applyConfig = (config) => {
     setShowConfig(false);
-    rng = new alea(config.seed);
-    delete config.seed;
+    console.log('config.seed', config.seed);
     if (validateConfig(config)) {
       setConfigInStorage(config);
       setTargetConfig({...config});
@@ -284,6 +286,7 @@ function App() {
                     validateSize={validateSize}
                     validateNumMines={validateNumMines}
                     config={targetConfig}
+                    maxSeed={maxSeed}
                     version={version} />
       <div className='AppSpacer' />
     </div>);

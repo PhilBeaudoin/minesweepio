@@ -11,6 +11,10 @@
   width: fit-content;
 }
 
+.SmallWidth {
+  width: 191px;
+}
+
 .Unselectable {
   user-select: none;
 }
