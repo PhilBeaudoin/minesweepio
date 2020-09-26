@@ -13,8 +13,8 @@ import Solver from './Solver';
 
 const autosolve = false;
 const seed = Math.random();
-const rng = new alea(seed);
-const version = 'v 0.4 (beta)';
+let rng = new alea(seed);
+const version = 'v 0.5 (beta)';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -236,6 +236,8 @@ function App() {
 
   const applyConfig = (config) => {
     setShowConfig(false);
+    rng = new alea(config.seed);
+    delete config.seed;
     if (validateConfig(config)) {
       setConfigInStorage(config);
       setTargetConfig({...config});

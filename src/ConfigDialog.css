@@ -5,6 +5,12 @@
   width: fit-content;
 }
 
+.Subform {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+}
+
 .Unselectable {
   user-select: none;
 }

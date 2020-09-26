@@ -4,11 +4,15 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import Button from '@material-ui/core/Button';
+import Box from '@material-ui/core/Box';
+import Link from '@material-ui/core/Link';
 import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
 import './ConfigDialog.css';
+
+const maxSeed = 1000000;
 
 function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
                       calcNumMinesBounds, validateSize, validateNumMines,
@@ -19,6 +23,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const [ hasNoFiftyFifty, setHasNoFiftyFifty ] =
       useState(config.hasNoFiftyFifty);
   const [ revealCorners, setRevealCorners ] = useState(config.revealCorners);
+  const [ manualSeed, setManualSeed ] = useState(false);
+  const [ seed, setSeed ] = useState();
 
   useEffect(() => {
     if (open) {
@@ -27,6 +33,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       setIsLogic(config.isLogic);
       setHasNoFiftyFifty(config.hasNoFiftyFifty);
       setRevealCorners(config.revealCorners);
+      setManualSeed(false);
+      setSeed(Math.floor(Math.random()*maxSeed));
     }
   }, [open, setSize, setNumMines, setIsLogic, setHasNoFiftyFifty,
       setRevealCorners, config]);
@@ -68,9 +76,17 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     return !validateNumMines(val, size);
   }
 
+  function errorInSeed() {
+    if (!/^\s*\d+\s*$/g.test(seed)) return true;
+    const val = Number.parseInt(seed);
+    return val < 0 || val >= maxSeed;
+  }
+
+
   function anyError() {
     if (parseRawSize() === false) return true;
     if (errorInNumMines()) return true;
+    if (errorInSeed()) return true;
     return false;
   }
 
@@ -89,7 +105,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       numMines: Number.parseInt(numMines),
       isLogic: isLogic,
       hasNoFiftyFifty: hasNoFiftyFifty,
-      revealCorners: revealCorners
+      revealCorners: revealCorners,
+      seed: seed / maxSeed
     });
   }
 
@@ -145,6 +162,27 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
           checked={revealCorners}
           onChange={e => setRevealCorners(e.target.checked)}
           label='Reveal corners' />
+        <Box mt={1} className='Subform'>
+          <Link href="#"
+                onClick={e => {setManualSeed(!manualSeed);
+                         e.preventDefault(); }}
+                variant="body2">
+            Set seed {manualSeed ? 'automatically' : 'manually'}
+          </Link>
+          {manualSeed ?
+            <Box mt={1}>
+              <TextField
+                       label='Seed'
+                       variant='filled'
+                       value={seed}
+                       onChange={e => setSeed(e.target.value)}
+                       onFocus={selectTextOnFocus}
+                       error={errorInSeed()}
+                       helperText={`Number between 0 and ${maxSeed - 1}`}
+                     />
+            </Box>
+          : ''}
+        </Box>
       </div>
       <DialogActions>
         <Button onClick={handleCancel} color='primary'>
