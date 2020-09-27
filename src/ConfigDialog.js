@@ -111,8 +111,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       console.log('Error! Should not call handleApply when in error');
       return;
     }
-    console.log('Seed: ', seed);
-     onApply({
+    onApply({
       size,
       numMines: Number.parseInt(numMines),
       isLogic: isLogic,

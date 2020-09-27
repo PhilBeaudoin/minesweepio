@@ -239,7 +239,6 @@ function App() {
 
   const applyConfig = (config) => {
     setShowConfig(false);
-    console.log('config.seed', config.seed);
     if (validateConfig(config)) {
       setConfigInStorage(config);
       setTargetConfig({...config});
