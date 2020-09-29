@@ -1,7 +1,6 @@
 .Form {
   display: flex;
   flex-direction: column;
-  margin: 22px;
   width: fit-content;
 }
 

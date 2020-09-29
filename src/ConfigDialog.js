@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogContent from '@material-ui/core/DialogContent';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import Button from '@material-ui/core/Button';
@@ -138,9 +139,15 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     <Dialog open={open}
             disableBackdropClick
             onClose={handleCancel} >
-      <DialogTitle className='Unselectable'>Minesweep.IO
-      <Typography className='Unselectable' variant='subtitle2'>{version}</Typography></DialogTitle>
-      <div className='Form'>
+      <DialogTitle className='Unselectable' disableTypography>
+        <Typography className='Unselectable' variant='h6'>
+          Minesweep.IO
+        </Typography>
+        <Typography className='Unselectable' variant='subtitle2'>
+          {version}
+        </Typography>
+      </DialogTitle>
+      <DialogContent className='Form'>
         <TextField label='Size'
                    variant='filled'
                    value={rawSize}
@@ -220,7 +227,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
             </Link>
           </form>
         </Box>
-      </div>
+      </DialogContent>
       <DialogActions>
         <Button onClick={handleCancel} color='primary'>
           Cancel

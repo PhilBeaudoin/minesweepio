@@ -13,7 +13,7 @@ import Solver from './Solver';
 
 const autosolve = false;
 const maxSeed = 1000000;
-const version = 'v 1.0';
+const version = 'v 1.1';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -59,7 +59,7 @@ const configVarName = 'config';
 function getConfigFromStorage() {
   try {
     const config = JSON.parse(localStorage.getItem(configVarName));
-    config.seed = Math.floor(Math.random() * maxSeed) / maxSeed;;
+    config.seed = calcRandomSeed();
     if (validateConfig(config)) return config;
   } catch(err) {}
   localStorage.clear();
@@ -96,6 +96,10 @@ function createMinefield(config) {
   }
 
   return mf
+}
+
+function calcRandomSeed() {
+  return Math.floor(Math.random() * maxSeed) / maxSeed;
 }
 
 function App() {
@@ -138,7 +142,9 @@ function App() {
 
   const restartBoard = useCallback(() => {
     setCurrentConfig(null);
-  }, [setCurrentConfig]);
+    if (!targetConfig.manualSeed)
+      targetConfig.seed = calcRandomSeed();
+  }, [setCurrentConfig, targetConfig.manualSeed, targetConfig.seed]);
 
   const revealAt = useCallback((x, y, set) => {
     const active = [[x, y]];
