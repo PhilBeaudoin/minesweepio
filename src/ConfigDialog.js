@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import Grid from '@material-ui/core/Grid';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import Dialog from '@material-ui/core/Dialog';
@@ -16,14 +17,25 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import IconButton from '@material-ui/core/IconButton';
 import FilledInput from '@material-ui/core/FilledInput';
 import Checkbox from '@material-ui/core/Checkbox';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import Radio from '@material-ui/core/Radio';
 import Typography from '@material-ui/core/Typography';
 import Refresh from '@material-ui/icons/Refresh';
+
+import genStrLocalizer, { locales } from './Language.js'
 import './ConfigDialog.css';
 
 function calcSeed(smallSeed, maxSeed) {
   const valid = smallSeed >= 0 && smallSeed < maxSeed;
   return Math.floor((valid ? smallSeed : Math.random()) * maxSeed);
 }
+
+const selectTextOnFocus = event => {
+  event.preventDefault();
+  const { target } = event;
+  target.focus();
+  target.setSelectionRange(0, target.value.length);
+};
 
 function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
                       calcNumMinesBounds, validateSize, validateNumMines,
@@ -37,6 +49,13 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const [ revealCorners, setRevealCorners ] = useState(config.revealCorners);
   const [ manualSeed, setManualSeed ] = useState(config.manualSeed);
   const [ seed, setSeed ] = useState(calcSeed(config.seed, maxSeed));
+  const [ showLanguages, setShowLanguages ] = useState(false);
+  const [ language, setLanguage ] = useState(config.language);
+  const [ s, setS ] = useState(() => {return str => str;});
+
+  useEffect(() => {
+    setS(() => {return genStrLocalizer(language)});
+  }, [language]);
 
   useEffect(() => {
     if (open) {
@@ -47,9 +66,11 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       setRevealCorners(config.revealCorners);
       setManualSeed(config.manualSeed);
       setSeed(calcSeed(config.seed, maxSeed));
+      setShowLanguages(false);
+      setLanguage(config.language);
     }
   }, [open, setSize, setNumMines, setIsLogic, setHasNoFiftyFifty,
-      setRevealCorners, setManualSeed, setSeed, maxSeed, config]);
+      setRevealCorners, setManualSeed, setSeed, maxSeed, setLanguage, config]);
 
   const sizeText = useCallback(() => {
     return size.x + ' x ' + size.y;
@@ -57,13 +78,6 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const [ rawSize, setRawSize ] = useState(sizeText());
 
   useEffect(() => { setRawSize(sizeText()); }, [sizeText]);
-
-  const selectTextOnFocus = event => {
-    event.preventDefault();
-    const { target } = event;
-    target.focus();
-    target.setSelectionRange(0, target.value.length);
-  };
 
   const parseRawSize = () => {
     let val = rawSize.trim().split(/\s*[.xX:\-|,\s]\s*/);
@@ -115,11 +129,12 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     onApply({
       size,
       numMines: Number.parseInt(numMines),
-      isLogic: isLogic,
-      hasNoFiftyFifty: hasNoFiftyFifty,
-      revealCorners: revealCorners,
-      manualSeed: manualSeed,
-      seed: (manualSeed ? seed : Math.floor(Math.random() * maxSeed)) / maxSeed
+      isLogic,
+      hasNoFiftyFifty,
+      revealCorners,
+      manualSeed,
+      seed: (manualSeed ? seed : Math.floor(Math.random() * maxSeed)) / maxSeed,
+      language
     });
   };
 
@@ -138,6 +153,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   return (
     <Dialog open={open}
             disableBackdropClick
+            fullWidth={true}
+            maxWidth='sm'
             onClose={handleCancel} >
       <DialogTitle className='Unselectable' disableTypography>
         <Typography className='Unselectable' variant='h6'>
@@ -147,98 +164,102 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
           {version}
         </Typography>
       </DialogTitle>
-      <DialogContent className='Form'>
-        <TextField label='Size'
-                   variant='filled'
-                   value={rawSize}
-                   onChange={e => setRawSize(e.target.value)}
-                   onFocus={selectTextOnFocus}
-                   onBlur={validateSizeOnBlur}
-                   error={parseRawSize() === false}
-                   helperText={sizeErrorText()}
-                 />
-        <TextField label='Number of mines'
-                   variant='filled'
-                   value={numMines}
-                   onChange={e => setNumMines(e.target.value)}
-                   onFocus={selectTextOnFocus}
-                   error={errorInNumMines()}
-                   helperText={numMinesErrorText()}
-                 />
-        <FormControlLabel className='Unselectable'
-          control={<Checkbox/>}
-          checked={isLogic}
-          onChange={e => setIsLogic(e.target.checked)}
-          label='Always logical' />
-        <FormControlLabel className='Unselectable'
-          control={<Checkbox/>}
-          disabled={isLogic}
-          checked={hasNoFiftyFifty || isLogic}
-          onChange={e => setHasNoFiftyFifty(e.target.checked)}
-          label='Reduce bad luck™' />
-        <FormControlLabel className='Unselectable'
-          control={<Checkbox/>}
-          checked={revealCorners}
-          onChange={e => setRevealCorners(e.target.checked)}
-          label='Reveal corners' />
-        <Box mt={1} className='Subform'>
-          <Link href="#"
-                onClick={e => {setManualSeed(!manualSeed);
-                         e.preventDefault(); }}
-                variant="body2">
-            Set seed {manualSeed ? 'automatically' : 'manually'}
-          </Link>
-          {manualSeed ?
-            <Box mt={1}>
-              <FormControl variant='filled'>
-                <InputLabel>Seed</InputLabel>
-                <FilledInput
-                  className='SmallWidth'
-                  label='Seed'
-                  value={seed}
-                  onChange={e => setSeed(e.target.value)}
-                  onFocus={selectTextOnFocus}
-                  error={errorInSeed()}
-                  endAdornment={
-                    <InputAdornment position='end'>
-                      <IconButton edge='end'
-                                  onClick={e => setSeed(calcSeed(-1, maxSeed))}>
-                        <Refresh />
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-                <FormHelperText>min 0, max {maxSeed - 1}</FormHelperText>
-              </FormControl>
+      <DialogContent>
+        <Grid container spacing={1}>
+          <Grid item xs={12} sm={6}>
+            <TextField label={s('Size')}
+                      variant='filled'
+                      value={rawSize}
+                      fullWidth
+                      onChange={e => setRawSize(e.target.value)}
+                      onFocus={selectTextOnFocus}
+                      onBlur={validateSizeOnBlur}
+                      error={parseRawSize() === false}
+                      helperText={sizeErrorText()}
+                    />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label={s('Number of mines')}
+                      variant='filled'
+                      value={numMines}
+                      fullWidth
+                      onChange={e => setNumMines(e.target.value)}
+                      onFocus={selectTextOnFocus}
+                      error={errorInNumMines()}
+                      helperText={numMinesErrorText()}
+                    />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <FormControlLabel className='Unselectable'
+              control={<Checkbox/>}
+              checked={isLogic}
+              onChange={e => setIsLogic(e.target.checked)}
+              label={s('Always logical')} />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <FormControlLabel className='Unselectable'
+              control={<Checkbox/>}
+              disabled={isLogic}
+              checked={hasNoFiftyFifty || isLogic}
+              onChange={e => setHasNoFiftyFifty(e.target.checked)}
+              label={s('Reduce bad luck™')} />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <FormControlLabel className='Unselectable'
+              control={<Checkbox/>}
+              checked={revealCorners}
+              onChange={e => setRevealCorners(e.target.checked)}
+              label={s('Reveal corners')} />
+          </Grid>
+          <Grid item xs={12}>
+            <OptionalBox visible={manualSeed}
+                        toggle={setManualSeed}
+                        textWhenHidden={s('Specify a seed')}
+                        textWhenVisible={s('Use random seed')}>
+              <ManualSeedBox seed={seed}
+                            setSeed={setSeed}
+                            maxSeed={maxSeed}
+                            errorInSeed={errorInSeed}
+                            s={s} />
+            </OptionalBox>
+          </Grid>
+          <Grid item xs={12}>
+            <OptionalBox visible={showLanguages}
+                        toggle={setShowLanguages}
+                        textWhenHidden={s('Show language selection')}
+                        textWhenVisible={s('Hide language selection')}>
+              <LanguageBox language={language} setLanguage={setLanguage} />
+            </OptionalBox>
+          </Grid>
+          <Grid item xs={12}>
+            <Box mt={1} className='Subform'>
+              <form action="https://www.paypal.com/cgi-bin/webscr"
+                    method="post"
+                    target="_blank">
+                <input type="hidden" name="cmd" value="_s-xclick" />
+                <input type="hidden" name="hosted_button_id"
+                      value="2Q5MZ5MJLN976" />
+                <Link href="#"
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={e => {e.target.closest('form').submit();
+                                    e.preventDefault(); }}
+                      variant="body2">
+                  {s('Donate to the fairies')}
+                </Link>
+              </form>
             </Box>
-          : ''}
-        </Box>
-        <Box mt={1} className='Subform'>
-          <form action="https://www.paypal.com/cgi-bin/webscr" 
-                method="post"
-                target="_blank">
-            <input type="hidden" name="cmd" value="_s-xclick" />
-            <input type="hidden" name="hosted_button_id" 
-                   value="2Q5MZ5MJLN976" />
-            <Link href="#"
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={e => {e.target.closest('form').submit();
-                                 e.preventDefault(); }}
-                  variant="body2">
-              Donate to the programmer
-            </Link>
-          </form>
-        </Box>
+          </Grid>
+        </Grid>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCancel} color='primary'>
-          Cancel
+          {s('Cancel')}
         </Button>
         <Button onClick={handleApply}
                 color='primary'
                 disabled={anyError()}>
-          Restart
+          {s('New game')}
         </Button>
       </DialogActions>
 
@@ -274,9 +295,69 @@ ConfigDialog.propTypes = {
     hasNoFiftyFifty: PropTypes.bool.isRequired,
     revealCorners: PropTypes.bool.isRequired,
     manualSeed: PropTypes.bool.isRequired,
-    seed: PropTypes.number
+    seed: PropTypes.number,
+    language: PropTypes.string.isRequired
   }),
   version: PropTypes.string.isRequired
 };
+
+function OptionalBox({visible, toggle, textWhenHidden, textWhenVisible,
+                      children}) {
+  return (
+    <Box mt={1} className='Subform'>
+      <Link href="#"
+            onClick={e => {toggle(!visible); e.preventDefault(); }}
+            variant="body2">
+        {visible ? textWhenVisible : textWhenHidden}
+      </Link>
+      { visible ? children : ''}
+    </Box>
+  );
+}
+
+function ManualSeedBox({seed, setSeed, maxSeed, errorInSeed, s}) {
+  return (
+    <Box mt={1}>
+      <FormControl variant='filled'>
+        <InputLabel>{s('Manual seed')}</InputLabel>
+        <FilledInput
+          className='SmallWidth'
+          value={seed}
+          onChange={e => setSeed(e.target.value)}
+          onFocus={selectTextOnFocus}
+          error={errorInSeed()}
+          endAdornment={
+            <InputAdornment position='end'>
+              <IconButton edge='end'
+                          onClick={e => setSeed(calcSeed(-1, maxSeed))}>
+                <Refresh />
+              </IconButton>
+            </InputAdornment>
+          }
+        />
+        <FormHelperText>min 0, max {maxSeed - 1}</FormHelperText>
+      </FormControl>
+    </Box>
+  );
+}
+
+function LanguageBox({language, setLanguage}) {
+  return (
+    <Box mt={1}>
+      <FormControl component="fieldset">
+        <RadioGroup value={language}
+                    onChange={e => setLanguage(e.target.value)}>
+          {
+            Object.entries(locales).map(([key, value]) =>
+              <FormControlLabel key={key}
+                                value={key}
+                                control={<Radio />}
+                                label={value} />)
+          }
+        </RadioGroup>
+      </FormControl>
+    </Box>
+  );
+}
 
 export default ConfigDialog;

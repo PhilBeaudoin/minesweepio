@@ -21,7 +21,8 @@ const defaultConfig = {
   'isLogic': false,
   'hasNoFiftyFifty': false,
   'revealCorners': false,
-  'manualSeed': false
+  'manualSeed': false,
+  'language': 'en'
 };
 
 const sizeBounds = { min: {x: 9, y: 9}, max: {x: 59, y: 30} }
@@ -52,7 +53,8 @@ function validateConfig(config) {
          typeof(config.isLogic) === 'boolean' &&
          typeof(config.hasNoFiftyFifty) === 'boolean' &&
          typeof(config.revealCorners) === 'boolean' &&
-         typeof(config.manualSeed) === 'boolean';
+         typeof(config.manualSeed) === 'boolean' &&
+         (config.language === 'en' || config.language === 'fr');
 }
 
 const configVarName = 'config';
