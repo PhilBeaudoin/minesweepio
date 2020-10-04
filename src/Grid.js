@@ -110,7 +110,7 @@ function Grid({minefield:mf, mfComplete, setNumFlags, setIsWorried, hasExploded,
       }
       if (reveal) {
         const set = new XYSet(mf.grid);
-        revealedXYs.forEach(xy => revealAt(...xy, set));
+        revealAt(revealedXYs, set);
       } else {
         revealedXYs.forEach(xy => setStateXY(...xy, ' '));
       }

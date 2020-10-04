@@ -6,7 +6,6 @@ import DialogContent from '@material-ui/core/DialogContent';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import Button from '@material-ui/core/Button';
-import Box from '@material-ui/core/Box';
 import Link from '@material-ui/core/Link';
 import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -39,10 +38,11 @@ const selectTextOnFocus = event => {
 
 function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
                       calcNumMinesBounds, validateSize, validateNumMines,
-                      maxSeed, version }) {
+                      maxUndos, maxSeed, version }) {
 
   const [ size, setSize ] = useState(config.size);
   const [ numMines, setNumMines ] = useState(config.numMines);
+  const [ numUndos, setNumUndos ] = useState(config.numUndos);
   const [ isLogic, setIsLogic ] = useState(config.isLogic);
   const [ hasNoFiftyFifty, setHasNoFiftyFifty ] =
       useState(config.hasNoFiftyFifty);
@@ -61,6 +61,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     if (open) {
       setSize(config.size);
       setNumMines(config.numMines);
+      setNumUndos(config.numUndos);
       setIsLogic(config.isLogic);
       setHasNoFiftyFifty(config.hasNoFiftyFifty);
       setRevealCorners(config.revealCorners);
@@ -69,8 +70,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       setShowLanguages(false);
       setLanguage(config.language);
     }
-  }, [open, setSize, setNumMines, setIsLogic, setHasNoFiftyFifty,
-      setRevealCorners, setManualSeed, setSeed, maxSeed, setLanguage, config]);
+  }, [open, maxSeed, config]);
 
   const sizeText = useCallback(() => {
     return size.x + ' x ' + size.y;
@@ -78,6 +78,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const [ rawSize, setRawSize ] = useState(sizeText());
 
   useEffect(() => { setRawSize(sizeText()); }, [sizeText]);
+
+  // Size parser and validator
 
   const parseRawSize = () => {
     let val = rawSize.trim().split(/\s*[.xX:\-|,\s]\s*/);
@@ -96,11 +98,40 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     setSize(val);
   };
 
+  const sizeErrorText = () => {
+    if (parseRawSize() !== false) return ' ';
+    return `min ${sizeBounds.min.x} x ${sizeBounds.min.y}, ` +
+           `max ${sizeBounds.max.x} x ${sizeBounds.max.y}`;
+  };
+
+  // Number of mines parser and validator
+
   const errorInNumMines = () => {
     if (!/^\s*\d+\s*$/g.test(numMines)) return true;
     const val = Number.parseInt(numMines);
     return !validateNumMines(val, size);
   };
+
+  const numMinesErrorText = () => {
+    if (!errorInNumMines()) return ' ';
+    const numMinesBounds = calcNumMinesBounds(size);
+    return `min ${numMinesBounds.min}, max ${numMinesBounds.max}`;
+  };
+
+  // Number of undos parser and validator
+
+  const errorInNumUndos = () => {
+    if (!/^\s*\d+\s*$/g.test(numUndos)) return true;
+    const val = Number.parseInt(numUndos);
+    return val < 0 || val > maxUndos;
+  };
+
+  const numUndosErrorText = () => {
+    if (!errorInNumUndos()) return ' ';
+    return `min 0, max ${maxUndos}`;
+  };
+
+  // Seed parser and validator
 
   const errorInSeed = () => {
     if (!manualSeed) return false;
@@ -109,12 +140,17 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     return val < 0 || val >= maxSeed;
   };
 
+  // Error checker
+
   const anyError = () => {
     if (parseRawSize() === false) return true;
     if (errorInNumMines()) return true;
+    if (errorInNumUndos()) return true;
     if (errorInSeed()) return true;
     return false;
   };
+
+  // Dialog action handlers
 
   const handleCancel = () => {
     setSize({...size}); // Force-reset the raw text.
@@ -129,6 +165,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     onApply({
       size,
       numMines: Number.parseInt(numMines),
+      numUndos: Number.parseInt(numUndos),
       isLogic,
       hasNoFiftyFifty,
       revealCorners,
@@ -138,17 +175,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
     });
   };
 
-  const sizeErrorText = () => {
-    if (parseRawSize() !== false) return ' ';
-    return `min ${sizeBounds.min.x} x ${sizeBounds.min.y}, ` +
-           `max ${sizeBounds.max.x} x ${sizeBounds.max.y}`;
-  };
-
-  const numMinesErrorText = () => {
-    if (!errorInNumMines()) return ' ';
-    const numMinesBounds = calcNumMinesBounds(size);
-    return `min ${numMinesBounds.min}, max ${numMinesBounds.max}`;
-  };
+  // Dialog
 
   return (
     <Dialog open={open}
@@ -166,89 +193,93 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       </DialogTitle>
       <DialogContent>
         <Grid container spacing={1}>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={4}>
             <TextField label={s('Size')}
-                      variant='filled'
-                      value={rawSize}
-                      fullWidth
-                      onChange={e => setRawSize(e.target.value)}
-                      onFocus={selectTextOnFocus}
-                      onBlur={validateSizeOnBlur}
-                      error={parseRawSize() === false}
-                      helperText={sizeErrorText()}
-                    />
+                       variant='filled'
+                       value={rawSize}
+                       fullWidth
+                       onChange={e => setRawSize(e.target.value)}
+                       onFocus={selectTextOnFocus}
+                       onBlur={validateSizeOnBlur}
+                       error={parseRawSize() === false}
+                       helperText={sizeErrorText()} />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={4}>
             <TextField label={s('Number of mines')}
-                      variant='filled'
-                      value={numMines}
-                      fullWidth
-                      onChange={e => setNumMines(e.target.value)}
-                      onFocus={selectTextOnFocus}
-                      error={errorInNumMines()}
-                      helperText={numMinesErrorText()}
-                    />
+                       variant='filled'
+                       value={numMines}
+                       fullWidth
+                       onChange={e => setNumMines(e.target.value)}
+                       onFocus={selectTextOnFocus}
+                       error={errorInNumMines()}
+                       helperText={numMinesErrorText()} />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField label={s('Number of fairies')}
+                       variant='filled'
+                       value={numUndos}
+                       fullWidth
+                       onChange={e => setNumUndos(e.target.value)}
+                       onFocus={selectTextOnFocus}
+                       error={errorInNumUndos()}
+                       helperText={numUndosErrorText()} />
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControlLabel className='Unselectable'
-              control={<Checkbox/>}
-              checked={isLogic}
-              onChange={e => setIsLogic(e.target.checked)}
-              label={s('Always logical')} />
+                              control={<Checkbox/>}
+                              checked={isLogic}
+                              onChange={e => setIsLogic(e.target.checked)}
+                              label={s('Always logical')} />
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControlLabel className='Unselectable'
-              control={<Checkbox/>}
-              disabled={isLogic}
-              checked={hasNoFiftyFifty || isLogic}
-              onChange={e => setHasNoFiftyFifty(e.target.checked)}
-              label={s('Reduce bad luck™')} />
+                              control={<Checkbox/>}
+                              disabled={isLogic}
+                              checked={hasNoFiftyFifty || isLogic}
+                              onChange={e => setHasNoFiftyFifty(
+                                                              e.target.checked)}
+                              label={s('Reduce bad luck™')} />
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControlLabel className='Unselectable'
-              control={<Checkbox/>}
-              checked={revealCorners}
-              onChange={e => setRevealCorners(e.target.checked)}
-              label={s('Reveal corners')} />
+                              control={<Checkbox/>}
+                              checked={revealCorners}
+                              onChange={e => setRevealCorners(e.target.checked)}
+                              label={s('Reveal corners')} />
           </Grid>
+          <OptionalBox visible={manualSeed}
+                       toggle={setManualSeed}
+                       textWhenHidden={s('Specify a seed')}
+                       textWhenVisible={s('Use random seed')}>
+            <ManualSeedBox seed={seed}
+                           setSeed={setSeed}
+                           maxSeed={maxSeed}
+                           errorInSeed={errorInSeed}
+                           s={s} />
+          </OptionalBox>
+          <OptionalBox visible={showLanguages}
+                       toggle={setShowLanguages}
+                       textWhenHidden={s('Modify language')}
+                       textWhenVisible={s('Hide language selection')}>
+            <LanguageBox language={language} setLanguage={setLanguage} />
+          </OptionalBox>
           <Grid item xs={12}>
-            <OptionalBox visible={manualSeed}
-                        toggle={setManualSeed}
-                        textWhenHidden={s('Specify a seed')}
-                        textWhenVisible={s('Use random seed')}>
-              <ManualSeedBox seed={seed}
-                            setSeed={setSeed}
-                            maxSeed={maxSeed}
-                            errorInSeed={errorInSeed}
-                            s={s} />
-            </OptionalBox>
-          </Grid>
-          <Grid item xs={12}>
-            <OptionalBox visible={showLanguages}
-                        toggle={setShowLanguages}
-                        textWhenHidden={s('Show language selection')}
-                        textWhenVisible={s('Hide language selection')}>
-              <LanguageBox language={language} setLanguage={setLanguage} />
-            </OptionalBox>
-          </Grid>
-          <Grid item xs={12}>
-            <Box mt={1} className='Subform'>
-              <form action="https://www.paypal.com/cgi-bin/webscr"
-                    method="post"
-                    target="_blank">
-                <input type="hidden" name="cmd" value="_s-xclick" />
-                <input type="hidden" name="hosted_button_id"
-                      value="2Q5MZ5MJLN976" />
-                <Link href="#"
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={e => {e.target.closest('form').submit();
-                                    e.preventDefault(); }}
-                      variant="body2">
-                  {s('Donate to the fairies')}
-                </Link>
-              </form>
-            </Box>
+            <form action="https://www.paypal.com/cgi-bin/webscr"
+                  method="post"
+                  target="_blank">
+              <input type="hidden" name="cmd" value="_s-xclick" />
+              <input type="hidden" name="hosted_button_id"
+                     value="2Q5MZ5MJLN976" />
+              <Link className='Unselectable'
+                    href="#"
+                    onClick={e => {
+                              e.target.closest('form').submit();
+                              e.preventDefault();
+                            }}
+                    variant="body2">
+                {s('Donate to the fairies')}
+              </Link>
+            </form>
           </Grid>
         </Grid>
       </DialogContent>
@@ -262,7 +293,6 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
           {s('New game')}
         </Button>
       </DialogActions>
-
     </Dialog>
   );
 }
@@ -284,6 +314,7 @@ ConfigDialog.propTypes = {
   calcNumMinesBounds: PropTypes.func.isRequired,
   validateSize: PropTypes.func.isRequired,
   validateNumMines: PropTypes.func.isRequired,
+  maxUndos: PropTypes.number.isRequired,
   maxSeed: PropTypes.number.isRequired,
   config: PropTypes.exact({
     size: PropTypes.exact({
@@ -291,6 +322,7 @@ ConfigDialog.propTypes = {
       y: PropTypes.number.isRequired
     }),
     numMines: PropTypes.number.isRequired,
+    numUndos: PropTypes.number.isRequired,
     isLogic: PropTypes.bool.isRequired,
     hasNoFiftyFifty: PropTypes.bool.isRequired,
     revealCorners: PropTypes.bool.isRequired,
@@ -304,29 +336,30 @@ ConfigDialog.propTypes = {
 function OptionalBox({visible, toggle, textWhenHidden, textWhenVisible,
                       children}) {
   return (
-    <Box mt={1} className='Subform'>
-      <Link href="#"
-            onClick={e => {toggle(!visible); e.preventDefault(); }}
-            variant="body2">
-        {visible ? textWhenVisible : textWhenHidden}
-      </Link>
+    <>
+      <Grid item xs={12}>
+        <Link className='Unselectable'
+              href="#"
+              onClick={e => {toggle(!visible); e.preventDefault(); }}
+              variant="body2">
+          {visible ? textWhenVisible : textWhenHidden}
+        </Link>
+      </Grid>
       { visible ? children : ''}
-    </Box>
+    </>
   );
 }
 
 function ManualSeedBox({seed, setSeed, maxSeed, errorInSeed, s}) {
   return (
-    <Box mt={1}>
-      <FormControl variant='filled'>
+    <Grid item xs={12} sm={4}>
+      <FormControl variant='filled' fullWidth>
         <InputLabel>{s('Manual seed')}</InputLabel>
-        <FilledInput
-          className='SmallWidth'
-          value={seed}
-          onChange={e => setSeed(e.target.value)}
-          onFocus={selectTextOnFocus}
-          error={errorInSeed()}
-          endAdornment={
+        <FilledInput value={seed}
+                     onChange={e => setSeed(e.target.value)}
+                     onFocus={selectTextOnFocus}
+                     error={errorInSeed()}
+                     endAdornment={
             <InputAdornment position='end'>
               <IconButton edge='end'
                           onClick={e => setSeed(calcSeed(-1, maxSeed))}>
@@ -337,26 +370,29 @@ function ManualSeedBox({seed, setSeed, maxSeed, errorInSeed, s}) {
         />
         <FormHelperText>min 0, max {maxSeed - 1}</FormHelperText>
       </FormControl>
-    </Box>
-  );
+    </Grid>
+);
 }
 
 function LanguageBox({language, setLanguage}) {
   return (
-    <Box mt={1}>
-      <FormControl component="fieldset">
+    <Grid item xs={12}>
+      <FormControl component="fieldset" fullWidth>
         <RadioGroup value={language}
                     onChange={e => setLanguage(e.target.value)}>
-          {
-            Object.entries(locales).map(([key, value]) =>
-              <FormControlLabel key={key}
-                                value={key}
-                                control={<Radio />}
-                                label={value} />)
-          }
+          <Grid container spacing={1}>
+            { Object.entries(locales).map(([key, value]) =>
+              <Grid item xs={12} sm={4} key={key}>
+                <FormControlLabel className='Unselectable'
+                                  value={key}
+                                  control={<Radio />}
+                                  label={value} />
+              </Grid>
+            )}
+          </Grid>
         </RadioGroup>
       </FormControl>
-    </Box>
+    </Grid>
   );
 }
 

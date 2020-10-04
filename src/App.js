@@ -8,16 +8,18 @@ import ProgressBar from './ProgressBar';
 import XYSet from './XYSet';
 import { alea } from 'seedrandom';
 import ConfigDialog from './ConfigDialog';
+import FairyDialog from './FairyDialog';
 import Minefield from './Minefield';
 import Solver from './Solver';
 
 const autosolve = false;
 const maxSeed = 1000000;
-const version = 'v 1.2';
+const version = 'v 1.3';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
   'numMines': 10,
+  'numUndos': 0,
   'isLogic': false,
   'hasNoFiftyFifty': false,
   'revealCorners': false,
@@ -27,6 +29,7 @@ const defaultConfig = {
 
 const sizeBounds = { min: {x: 9, y: 9}, max: {x: 59, y: 30} }
 const numMinesBoundsRaw = { min: 10, max: 0.33898 }
+const maxUndos = 100;
 
 function calcNumMinesBounds(size) {
   return { min: numMinesBoundsRaw.min,
@@ -50,6 +53,7 @@ function validateNumMines(numMines, size) {
 function validateConfig(config) {
   return validateSize(config.size) &&
          validateNumMines(config.numMines, config.size) &&
+         (config.numUndos >= 0 && config.numUndos <= maxUndos) &&
          typeof(config.isLogic) === 'boolean' &&
          typeof(config.hasNoFiftyFifty) === 'boolean' &&
          typeof(config.revealCorners) === 'boolean' &&
@@ -119,13 +123,17 @@ function App() {
   const [ isSuccess, setIsSuccess ] = useState(null);
   const [ numRevealed, setNumRevealed ] = useState(null);
   const [ stateGrid, setStateGrid ] = useState(null);
+  const [ undosLeft, setUndosLeft ] = useState(null);
 
   // Timer state
-  const [ time, resetTimer, setTimerRunning ] = useTimer(null);
+  const [ time, resetTimer, setTimerRunning ] = useTimer(null, 1000);
 
   // UI state
   const [ isWorried, setIsWorried ] = useState(false);
   const [ showConfig, setShowConfig ] = useState(false);
+
+  // Fairy dialog state
+  const [ showFairyDialog, setShowFairyDialog ] = useState(false);
 
   useEffect(() => {
     setTimerRunning(!hasExploded && !isSuccess && !showConfig && mfComplete);
@@ -146,23 +154,34 @@ function App() {
     setCurrentConfig(null);
     if (!targetConfig.manualSeed)
       targetConfig.seed = calcRandomSeed();
-  }, [setCurrentConfig, targetConfig.manualSeed, targetConfig.seed]);
+  }, [targetConfig.manualSeed, targetConfig.seed]);
 
-  const revealAt = useCallback((x, y, set) => {
-    const active = [[x, y]];
+  const revealAt = useCallback((active, set) => {
+    let touchedMine = false;
+    active.forEach(([x, y]) => {
+      if (mf.grid.getXY(x, y) === '*')
+        touchedMine = true;
+    });
+    if (touchedMine) {
+      // Only allow undos if there are at least 5 flags placed.
+      if (undosLeft > 0 && numFlags >= 5) {
+          setUndosLeft(val => val - 1);
+        active.forEach(([x, y]) => setStateXY(x, y, ' '));
+        setShowFairyDialog(true);
+        return;
+      }
+      setHasExploded(true);
+    }
     while (active.length > 0) {
-      [x, y] = active.pop();
+      const [x, y] = active.pop();
       if (getStateXY(x, y) === '.' || set.has(x, y)) continue;
       setNumRevealed(num => num + 1);
       set.add(x, y);
       setStateXY(x, y, '.');
-      const val = mf.grid.getXY(x, y);
-      if (val === '*')
-        setHasExploded(true);
-      else if (val === 0)
+      if (mf.grid.getXY(x, y) === 0)
         mf.grid.forEachNeighbor(x, y, (xx, yy) => active.push([xx, yy]));
     }
-  }, [mf, getStateXY, setStateXY, setHasExploded]);
+  }, [mf, getStateXY, setStateXY, undosLeft, numFlags]);
 
   const numMinesLeft = useCallback(() => {
     return (mf && mfComplete) ? mf.numMines - numFlags : 0;
@@ -178,12 +197,12 @@ function App() {
       if (!autosolve) {
         const set = new XYSet(mf.grid);
         if (currentConfig.revealCorners) {
-          revealAt(0, 0, set);
-          revealAt(mf.grid.sx - 1, 0, set);
-          revealAt(0, mf.grid.sy - 1, set);
-          revealAt(mf.grid.sx - 1, mf.grid.sy - 1, set);
+          revealAt([[0, 0]], set);
+          revealAt([[mf.grid.sx - 1, 0]], set);
+          revealAt([[0, mf.grid.sy - 1]], set);
+          revealAt([[mf.grid.sx - 1, mf.grid.sy - 1]], set);
         }
-        revealAt(Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2), set);
+        revealAt([[Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2)]], set);
       } else {
         const solver =
             new Solver(mf, Math.floor(mf.grid.sx/2), Math.floor(mf.grid.sy/2));
@@ -209,7 +228,7 @@ function App() {
       setNumFlags(mf.numMines);
       setIsSuccess(true);
     }
-  }, [numRevealed, setNumFlags, mf, setIsSuccess]);
+  }, [numRevealed, mf]);
 
   useEffect(() => {
     if (currentConfig !== targetConfig) {
@@ -221,10 +240,10 @@ function App() {
       setIsSuccess(false);
       setNumRevealed(0);
       setStateGrid(' '.repeat(targetConfig.size.x * targetConfig.size.y));
+      setUndosLeft(targetConfig.numUndos);
       resetTimer();
     }
-  }, [currentConfig, setCurrentConfig, targetConfig, setMf, setNumFlags,
-      setHasExploded, setIsSuccess, setNumRevealed, setStateGrid, resetTimer]);
+  }, [currentConfig, targetConfig, resetTimer]);
 
   useEffect(() => {
     if (mf) {
@@ -243,7 +262,7 @@ function App() {
         advance();
       }
     }
-  }, [mf, setMfCompletionPercent]);
+  }, [mf]);
 
   const applyConfig = (config) => {
     setShowConfig(false);
@@ -293,8 +312,12 @@ function App() {
                     validateSize={validateSize}
                     validateNumMines={validateNumMines}
                     config={targetConfig}
+                    maxUndos={maxUndos}
                     maxSeed={maxSeed}
                     version={version} />
+      <FairyDialog open={showFairyDialog}
+                   onCancel={() => setShowFairyDialog(false)}
+                   language={targetConfig.language} />
       <div className='AppSpacer' />
     </div>);
 }
