@@ -42,7 +42,7 @@ const useStyles = makeStyles({
   }
 });
 
-const tickInMs = 20;
+const tickInMs = 6;
 
 function FairyDialog({ open, onCancel, language, annoyingFairies }) {
   const classes = useStyles();
