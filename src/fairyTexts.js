@@ -1,6 +1,14 @@
 const dialogs = [
 
   ///////////////////////////////////////////////////////////
+  // Basic
+
+  [{ lines: [ "A fairy appears.",
+              "“I wouldn't click there if I were you...”" ],
+     opts:  [ "I'll be more careful.",
+              { text: "Thanks! Have some money.", donate: true }]}],
+
+  ///////////////////////////////////////////////////////////
   // Gullveig
 
   [{ lines: [ "A strange being appears." ],

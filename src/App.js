@@ -14,7 +14,7 @@ import Solver from './Solver';
 
 const autosolve = false;
 const maxSeed = 1000000;
-const version = 'v 1.3';
+const version = 'v 1.4';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -23,6 +23,7 @@ const defaultConfig = {
   'isLogic': false,
   'hasNoFiftyFifty': false,
   'revealCorners': false,
+  'annoyingFairies': false,
   'manualSeed': false,
   'language': 'en'
 };
@@ -57,6 +58,7 @@ function validateConfig(config) {
          typeof(config.isLogic) === 'boolean' &&
          typeof(config.hasNoFiftyFifty) === 'boolean' &&
          typeof(config.revealCorners) === 'boolean' &&
+         typeof(config.annoyingFairies) === 'boolean' &&
          typeof(config.manualSeed) === 'boolean' &&
          (config.language === 'en' || config.language === 'fr');
 }
@@ -317,7 +319,8 @@ function App() {
                     version={version} />
       <FairyDialog open={showFairyDialog}
                    onCancel={() => setShowFairyDialog(false)}
-                   language={targetConfig.language} />
+                   language={targetConfig.language}
+                   annoyingFairies={targetConfig.annoyingFairies} />
       <div className='AppSpacer' />
     </div>);
 }

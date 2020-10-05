@@ -12,6 +12,7 @@ const localizations = {
   "Always logical": {fr: "Toujours logique"},
   "Reduce bad luck™": {fr: "Malchance réduite™"},
   "Reveal corners": {fr: "Révéler les coins"},
+  "Annoying fairies": {fr: "Fées gossantes"},
   "Specify a seed": {fr: "Spécifier une seed"},
   "Use random seed": {fr: "Utiliser une seed aléatoire"},
   "Modify language": {fr: "Modifier la langue"},
@@ -21,6 +22,10 @@ const localizations = {
   "New game": {fr: "Nouvelle partie"},
   "Manual seed": {fr: "Seed manuelle"},
 
+  "A fairy appears.": {fr: "Une fée apparaît."},
+  "“I wouldn't click there if I were you...”": {fr: "“Je ne cliquerais pas là si j'étais toi...”"},
+  "I'll be more careful.": {fr: "Je vais faire attention."},
+  "Thanks! Have some money.": {fr: "Merci! Voilà un peu d'argent."},
 
   "A strange being appears.": {fr: "Une étrange créature apparaît."},
   "Gullveig the Fae": {fr: "Gullveig le Fé"},

@@ -44,7 +44,7 @@ const useStyles = makeStyles({
 
 const tickInMs = 20;
 
-function FairyDialog({ open, onCancel, language }) {
+function FairyDialog({ open, onCancel, language, annoyingFairies }) {
   const classes = useStyles();
 
   const [ s, setS ] = useState(() => genStrLocalizer(language));
@@ -64,9 +64,11 @@ function FairyDialog({ open, onCancel, language }) {
 
   useEffect(() => {
     reset();
-    setPosInDialog([Math.floor(Math.random() * dialogs.length), 0]);
+    const dialogIdx = annoyingFairies ?
+        Math.floor(Math.random() * dialogs.length) : 0;
+    setPosInDialog([dialogIdx, 0]);
     setTimerRunning(open);
-  }, [open, reset, setTimerRunning]);
+  }, [open, reset, setTimerRunning, annoyingFairies]);
 
   useEffect(() => {
     const obj = dialogs[posInDialog[0]][posInDialog[1]];
@@ -163,7 +165,8 @@ function FairyDialog({ open, onCancel, language }) {
 FairyDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   onCancel: PropTypes.func.isRequired,
-  language: PropTypes.string.isRequired
+  language: PropTypes.string.isRequired,
+  annoyingFairies: PropTypes.bool.isRequired
 };
 
 function Typer({children, typedLength}) {

@@ -47,6 +47,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const [ hasNoFiftyFifty, setHasNoFiftyFifty ] =
       useState(config.hasNoFiftyFifty);
   const [ revealCorners, setRevealCorners ] = useState(config.revealCorners);
+  const [ annoyingFairies, setAnnoyingFairies ] =
+      useState(config.annoyingFairies);
   const [ manualSeed, setManualSeed ] = useState(config.manualSeed);
   const [ seed, setSeed ] = useState(calcSeed(config.seed, maxSeed));
   const [ showLanguages, setShowLanguages ] = useState(false);
@@ -65,6 +67,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       setIsLogic(config.isLogic);
       setHasNoFiftyFifty(config.hasNoFiftyFifty);
       setRevealCorners(config.revealCorners);
+      setAnnoyingFairies(config.annoyingFairies);
       setManualSeed(config.manualSeed);
       setSeed(calcSeed(config.seed, maxSeed));
       setShowLanguages(false);
@@ -169,6 +172,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       isLogic,
       hasNoFiftyFifty,
       revealCorners,
+      annoyingFairies,
       manualSeed,
       seed: (manualSeed ? seed : Math.floor(Math.random() * maxSeed)) / maxSeed,
       language
@@ -246,6 +250,14 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
                               checked={revealCorners}
                               onChange={e => setRevealCorners(e.target.checked)}
                               label={s('Reveal corners')} />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <FormControlLabel className='Unselectable'
+                              control={<Checkbox/>}
+                              checked={annoyingFairies}
+                              onChange={e => setAnnoyingFairies(
+                                                              e.target.checked)}
+                              label={s('Annoying fairies')} />
           </Grid>
           <OptionalBox visible={manualSeed}
                        toggle={setManualSeed}
@@ -326,6 +338,7 @@ ConfigDialog.propTypes = {
     isLogic: PropTypes.bool.isRequired,
     hasNoFiftyFifty: PropTypes.bool.isRequired,
     revealCorners: PropTypes.bool.isRequired,
+    annoyingFairies: PropTypes.bool.isRequired,
     manualSeed: PropTypes.bool.isRequired,
     seed: PropTypes.number,
     language: PropTypes.string.isRequired
