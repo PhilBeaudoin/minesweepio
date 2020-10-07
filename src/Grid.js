@@ -43,8 +43,11 @@ function Grid({minefield:mf, mfComplete, setNumFlags, setIsWorried, hasExploded,
       else
         return '-64px';
     }
-    if (state === '-')
+    if (state === '|') {
       return '-192px';
+    }
+    if (state === '-')
+      return '-224px';
     if (state !== '.') {
       console.log('Error! User cell has undesirable value.');
       return '0px';
@@ -57,7 +60,7 @@ function Grid({minefield:mf, mfComplete, setNumFlags, setIsWorried, hasExploded,
       console.log('Error! Cell has neither a mine nor a valid digit.', val);
       return '0px';
     }
-    return -(192 + 32 * digit) + 'px';
+    return -(224 + 32 * digit) + 'px';
   }, [mf, getStateXY, hasExploded, isSuccess]);
 
   const pointerDown = useCallback((x, y) => {
@@ -79,7 +82,7 @@ function Grid({minefield:mf, mfComplete, setNumFlags, setIsWorried, hasExploded,
         // Immediately cycle through [empty, flag, ?]
         const cycle = ' f?';
         const idx = cycle.indexOf(state);
-        if (state === 'f') setNumFlags(num => num - 1);
+        if (state === 'f' || state === '|') setNumFlags(num => num - 1);
         if (idx !== -1) setStateXY(x, y, cycle[(idx + 1)%3]);
         if (state === ' ') setNumFlags(num => num + 1);
       }
@@ -103,7 +106,8 @@ function Grid({minefield:mf, mfComplete, setNumFlags, setIsWorried, hasExploded,
           // Do it only if flag count matches.
           let flagCount = 0;
           mf.grid.forEachNeighbor(x, y, (xx, yy) => {
-            if (getStateXY(xx, yy) === 'f') flagCount++;
+            const state = getStateXY(xx, yy);
+            if (state === 'f' || state === '|') flagCount++;
           });
           reveal = flagCount === mf.grid.getXY(x, y);
         }

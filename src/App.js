@@ -162,13 +162,15 @@ function App() {
     let touchedMine = false;
     active.forEach(([x, y]) => {
       if (mf.grid.getXY(x, y) === '*')
-        touchedMine = true;
+        touchedMine = [x, y];
     });
-    if (touchedMine) {
+    if (touchedMine !== false) {
       // Only allow undos if there are at least 5 flags placed.
       if (undosLeft > 0 && numFlags >= 5) {
           setUndosLeft(val => val - 1);
         active.forEach(([x, y]) => setStateXY(x, y, ' '));
+        setStateXY(...touchedMine, '|');
+        setNumFlags(f => f + 1);
         setShowFairyDialog(true);
         return;
       }
