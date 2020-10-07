@@ -82,7 +82,7 @@ function Grid({minefield:mf, mfComplete, setNumFlags, setIsWorried, hasExploded,
         // Immediately cycle through [empty, flag, ?]
         const cycle = ' f?';
         const idx = cycle.indexOf(state);
-        if (state === 'f' || state === '|') setNumFlags(num => num - 1);
+        if (state === 'f') setNumFlags(num => num - 1);
         if (idx !== -1) setStateXY(x, y, cycle[(idx + 1)%3]);
         if (state === ' ') setNumFlags(num => num + 1);
       }

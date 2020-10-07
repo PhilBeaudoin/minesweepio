@@ -14,7 +14,7 @@ import Solver from './Solver';
 
 const autosolve = false;
 const maxSeed = 1000000;
-const version = 'v 1.6';
+const version = 'v 1.7';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
