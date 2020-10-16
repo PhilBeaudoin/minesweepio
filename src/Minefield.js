@@ -87,6 +87,9 @@ class Minefield {
     patterns.push(patterns[2].rotate90cw());
     patterns.push(patterns[2].rotate90cw().rotate90cw());
     patterns.push(patterns[2].rotate90cw().rotate90cw().rotate90cw());
+    patterns.push(patterns[3].rotate90cw());
+    patterns.push(patterns[3].rotate90cw().rotate90cw());
+    patterns.push(patterns[3].rotate90cw().rotate90cw().rotate90cw());
 
     let badGrid = true;
     this.placeMinesRandomly(totalMines, setToIgnore);
