@@ -165,8 +165,8 @@ function App() {
         touchedMine = [x, y];
     });
     if (touchedMine !== false) {
-      // Only allow undos if there are at least 60% of flags placed.
-      if (undosLeft > 0 && numFlags >= 0.6 * mf.numMines) {
+      // Only allow undos if there are at least 50% of flags placed.
+      if (undosLeft > 0 && numFlags >= 0.5 * mf.numMines) {
           setUndosLeft(val => val - 1);
         active.forEach(([x, y]) => setStateXY(x, y, ' '));
         setStateXY(...touchedMine, '|');
