@@ -14,7 +14,7 @@ import Solver from './Solver';
 
 const autosolve = false;
 const maxSeed = 1000000;
-const version = 'v 1.9';
+const version = 'v 1.10';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -320,7 +320,7 @@ function App() {
                     maxSeed={maxSeed}
                     version={version} />
       <FairyDialog open={showFairyDialog}
-                   onCancel={() => setShowFairyDialog(false)}
+                   onCancel={(explode) => { setShowFairyDialog(false); if(explode) setHasExploded(true); } }
                    language={targetConfig.language}
                    annoyingFairies={targetConfig.annoyingFairies} />
       <div className='AppSpacer' />

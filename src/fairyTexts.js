@@ -6,6 +6,7 @@ const dialogs = [
   [{ lines: [ "A fairy appears.",
               "“I wouldn't click there if I were you...”" ],
      opts:  [ "I'll be more careful.",
+              { text: "I don't need your help, let me suffer!", explode: true },
               { text: "Thanks! Have some money.", donate: true }]}],
 
   ///////////////////////////////////////////////////////////

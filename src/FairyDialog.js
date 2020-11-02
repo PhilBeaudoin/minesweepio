@@ -52,6 +52,7 @@ function FairyDialog({ open, onCancel, language, annoyingFairies }) {
   const [ dialogObject, setDialogObject ] = useState(undefined);
   const [ selIdx, setSelIdx ] = useState(0);
   const [ time, resetTimer, setTimerRunning ] = useTimer(false, tickInMs);
+  const [ explode, setExplode ] = useState(false);
 
   useEffect(() => {
     setS(() => {return genStrLocalizer(language)});
@@ -68,13 +69,14 @@ function FairyDialog({ open, onCancel, language, annoyingFairies }) {
         Math.floor(Math.random() * dialogs.length) : 0;
     setPosInDialog([dialogIdx, 0]);
     setTimerRunning(open);
+    setExplode(false);
   }, [open, reset, setTimerRunning, annoyingFairies]);
 
   useEffect(() => {
     const obj = dialogs[posInDialog[0]][posInDialog[1]];
     setDialogObject(obj);
     if (obj === undefined)
-      onCancel();
+      onCancel(explode);
   }, [posInDialog, onCancel, resetTimer]);
 
   const advanceDialogue = useCallback((event, action) => {
@@ -90,6 +92,7 @@ function FairyDialog({ open, onCancel, language, annoyingFairies }) {
       }
       return [posInDialog[0], targetIdx];
     });
+    if (action.explode) setExplode(true);
     if (action.donate) event.target.closest('form').submit();
   }, [reset]);
 
@@ -126,7 +129,7 @@ function FairyDialog({ open, onCancel, language, annoyingFairies }) {
             disableBackdropClick
             fullWidth={true}
             maxWidth='sm'
-            onClose={onCancel}
+            onClose={() => onCancel(explode)}
             TransitionComponent={Zoom}>
       <DialogContent>
         <form action="https://www.paypal.com/cgi-bin/webscr"

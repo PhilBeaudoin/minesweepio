@@ -25,6 +25,7 @@ const localizations = {
   "A fairy appears.": {fr: "Une fée apparaît."},
   "“I wouldn't click there if I were you...”": {fr: "“Je ne cliquerais pas là si j'étais toi...”"},
   "I'll be more careful.": {fr: "Je vais faire attention."},
+  "I don't need your help, let me suffer!": {fr: "Pas besoin d'aide, je préfère souffrir!"},
   "Thanks! Have some money.": {fr: "Merci! Voilà un peu d'argent."},
 
   "A strange being appears.": {fr: "Une étrange créature apparaît."},
