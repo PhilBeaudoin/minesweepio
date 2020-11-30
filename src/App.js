@@ -14,7 +14,7 @@ import Solver from './Solver';
 
 const autosolve = false;
 const maxSeed = 1000000;
-const version = 'v 1.10';
+const version = 'v 1.11';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -88,10 +88,14 @@ function createMinefield(config) {
   const mf = new Minefield(config.size.x, config.size.y, rng);
   const setToIgnore = new XYSet(mf.grid);
   if (config.revealCorners) {
-    setToIgnore.add(0, 0);
-    setToIgnore.add(config.size.x - 1, 0);
-    setToIgnore.add(0, config.size.y - 1);
-    setToIgnore.add(config.size.x - 1, config.size.y - 1);
+    for (let i = 0; i < 2; ++i) {
+      for (let j = 0; j < 2; ++j) {
+        setToIgnore.add(0 + i, 0 + j);
+        setToIgnore.add(config.size.x - 1 - i, j);
+        setToIgnore.add(0 + i, config.size.y - 1 - j);
+        setToIgnore.add(config.size.x - 1 - i, config.size.y - 1 - j);
+      }
+    }
   }
   mf.grid.forCellsInRing(center.x, center.y, 1,
       (x, y) => setToIgnore.add(x, y));
