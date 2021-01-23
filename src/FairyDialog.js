@@ -77,7 +77,7 @@ function FairyDialog({ open, onCancel, language, annoyingFairies }) {
     setDialogObject(obj);
     if (obj === undefined)
       onCancel(explode);
-  }, [posInDialog, onCancel, resetTimer]);
+  }, [posInDialog, onCancel, explode]);
 
   const advanceDialogue = useCallback((event, action) => {
     reset();
