@@ -12,17 +12,17 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import InputLabel from '@material-ui/core/InputLabel';
-import InputAdornment from '@material-ui/core/InputAdornment';
-import IconButton from '@material-ui/core/IconButton';
-import FilledInput from '@material-ui/core/FilledInput';
 import Checkbox from '@material-ui/core/Checkbox';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
 import Typography from '@material-ui/core/Typography';
 import Refresh from '@material-ui/icons/Refresh';
+import {Select, ListSubheader, MenuItem } from '@material-ui/core';
 
 import genStrLocalizer, { locales } from './Language.js'
 import './ConfigDialog.css';
+
+const MaxHistorySize = 5; 
 
 function calcSeed(smallSeed, maxSeed) {
   const valid = smallSeed >= 0 && smallSeed < maxSeed;
@@ -37,26 +37,27 @@ const selectTextOnFocus = event => {
 };
 
 function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
-                      calcNumMinesBounds, validateSize, validateNumMines,
-                      maxUndos, maxSeed, version }) {
+  calcNumMinesBounds, validateSize, validateNumMines,
+  maxUndos, maxSeed, version }) {
 
-  const [ size, setSize ] = useState(config.size);
-  const [ numMines, setNumMines ] = useState(config.numMines);
-  const [ numUndos, setNumUndos ] = useState(config.numUndos);
-  const [ isLogic, setIsLogic ] = useState(config.isLogic);
-  const [ hasNoFiftyFifty, setHasNoFiftyFifty ] =
-      useState(config.hasNoFiftyFifty);
-  const [ revealCorners, setRevealCorners ] = useState(config.revealCorners);
-  const [ annoyingFairies, setAnnoyingFairies ] =
-      useState(config.annoyingFairies);
-  const [ manualSeed, setManualSeed ] = useState(config.manualSeed);
-  const [ seed, setSeed ] = useState(calcSeed(config.seed, maxSeed));
-  const [ showLanguages, setShowLanguages ] = useState(false);
-  const [ language, setLanguage ] = useState(config.language);
-  const [ s, setS ] = useState(() => {return str => str;});
+  const [size, setSize] = useState(config.size);
+  const [numMines, setNumMines] = useState(config.numMines);
+  const [numUndos, setNumUndos] = useState(config.numUndos);
+  const [isLogic, setIsLogic] = useState(config.isLogic);
+  const [hasNoFiftyFifty, setHasNoFiftyFifty] =
+    useState(config.hasNoFiftyFifty);
+  const [revealCorners, setRevealCorners] = useState(config.revealCorners);
+  const [annoyingFairies, setAnnoyingFairies] =
+    useState(config.annoyingFairies);
+  const [manualSeed, setManualSeed] = useState(config.manualSeed);
+  const [seed, setSeed] = useState(calcSeed(config.seed, maxSeed));
+  const [seedHistory, setSeedHistory] = useState(config.seedHistory);
+  const [showLanguages, setShowLanguages] = useState(false);
+  const [language, setLanguage] = useState(config.language);
+  const [s, setS] = useState(() => { return str => str; });
 
   useEffect(() => {
-    setS(() => {return genStrLocalizer(language)});
+    setS(() => { return genStrLocalizer(language) });
   }, [language]);
 
   useEffect(() => {
@@ -70,6 +71,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       setAnnoyingFairies(config.annoyingFairies);
       setManualSeed(config.manualSeed);
       setSeed(calcSeed(config.seed, maxSeed));
+      setSeedHistory(config.seedHistory || []);
       setShowLanguages(false);
       setLanguage(config.language);
     }
@@ -78,7 +80,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const sizeText = useCallback(() => {
     return size.x + ' x ' + size.y;
   }, [size]);
-  const [ rawSize, setRawSize ] = useState(sizeText());
+  const [rawSize, setRawSize] = useState(sizeText());
 
   useEffect(() => { setRawSize(sizeText()); }, [sizeText]);
 
@@ -104,7 +106,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const sizeErrorText = () => {
     if (parseRawSize() !== false) return ' ';
     return `min ${sizeBounds.min.x} x ${sizeBounds.min.y}, ` +
-           `max ${sizeBounds.max.x} x ${sizeBounds.max.y}`;
+      `max ${sizeBounds.max.x} x ${sizeBounds.max.y}`;
   };
 
   // Number of mines parser and validator
@@ -156,7 +158,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   // Dialog action handlers
 
   const handleCancel = () => {
-    setSize({...size}); // Force-reset the raw text.
+    setSize({ ...size }); // Force-reset the raw text.
     onCancel();
   };
 
@@ -165,6 +167,24 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       console.log('Error! Should not call handleApply when in error');
       return;
     }
+
+    if (seedHistory.length >= MaxHistorySize)
+      seedHistory.shift();
+
+    let newSeed = 0;
+    if (manualSeed) {
+      if (seedHistory.find((h) => h.seed === seed)) {
+        newSeed = seed;
+      } else {
+        newSeed = seed;
+        seedHistory.push({ seed: newSeed, time: Date.now() });
+      }
+    } else {
+      newSeed = Math.floor(Math.random() * maxSeed);
+      seedHistory.push({ seed: newSeed, time: Date.now() });
+    }
+
+
     onApply({
       size,
       numMines: Number.parseInt(numMines),
@@ -174,7 +194,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       revealCorners,
       annoyingFairies,
       manualSeed,
-      seed: (manualSeed ? seed : Math.floor(Math.random() * maxSeed)) / maxSeed,
+      seed: newSeed / maxSeed,
+      seedHistory: seedHistory,
       language
     });
   };
@@ -183,10 +204,10 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
 
   return (
     <Dialog open={open}
-            disableBackdropClick
-            fullWidth={true}
-            maxWidth='sm'
-            onClose={handleCancel} >
+      disableBackdropClick
+      fullWidth={true}
+      maxWidth='sm'
+      onClose={handleCancel} >
       <DialogTitle className='Unselectable' disableTypography>
         <Typography className='Unselectable' variant='h6'>
           Minesweep.IO
@@ -199,96 +220,97 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
         <Grid container spacing={1}>
           <Grid item xs={12} sm={4}>
             <TextField label={s('Size')}
-                       variant='filled'
-                       value={rawSize}
-                       fullWidth
-                       onChange={e => setRawSize(e.target.value)}
-                       onFocus={selectTextOnFocus}
-                       onBlur={validateSizeOnBlur}
-                       error={parseRawSize() === false}
-                       helperText={sizeErrorText()} />
+              variant='filled'
+              value={rawSize}
+              fullWidth
+              onChange={e => setRawSize(e.target.value)}
+              onFocus={selectTextOnFocus}
+              onBlur={validateSizeOnBlur}
+              error={parseRawSize() === false}
+              helperText={sizeErrorText()} />
           </Grid>
           <Grid item xs={12} sm={4}>
             <TextField label={s('Number of mines')}
-                       variant='filled'
-                       value={numMines}
-                       fullWidth
-                       onChange={e => setNumMines(e.target.value)}
-                       onFocus={selectTextOnFocus}
-                       error={errorInNumMines()}
-                       helperText={numMinesErrorText()} />
+              variant='filled'
+              value={numMines}
+              fullWidth
+              onChange={e => setNumMines(e.target.value)}
+              onFocus={selectTextOnFocus}
+              error={errorInNumMines()}
+              helperText={numMinesErrorText()} />
           </Grid>
           <Grid item xs={12} sm={4}>
             <TextField label={s('Number of fairies')}
-                       variant='filled'
-                       value={numUndos}
-                       fullWidth
-                       onChange={e => setNumUndos(e.target.value)}
-                       onFocus={selectTextOnFocus}
-                       error={errorInNumUndos()}
-                       helperText={numUndosErrorText()} />
+              variant='filled'
+              value={numUndos}
+              fullWidth
+              onChange={e => setNumUndos(e.target.value)}
+              onFocus={selectTextOnFocus}
+              error={errorInNumUndos()}
+              helperText={numUndosErrorText()} />
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControlLabel className='Unselectable'
-                              control={<Checkbox/>}
-                              checked={isLogic}
-                              onChange={e => setIsLogic(e.target.checked)}
-                              label={s('Always logical')} />
+              control={<Checkbox />}
+              checked={isLogic}
+              onChange={e => setIsLogic(e.target.checked)}
+              label={s('Always logical')} />
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControlLabel className='Unselectable'
-                              control={<Checkbox/>}
-                              disabled={isLogic}
-                              checked={hasNoFiftyFifty || isLogic}
-                              onChange={e => setHasNoFiftyFifty(
-                                                              e.target.checked)}
-                              label={s('Reduce bad luck™')} />
+              control={<Checkbox />}
+              disabled={isLogic}
+              checked={hasNoFiftyFifty || isLogic}
+              onChange={e => setHasNoFiftyFifty(
+                e.target.checked)}
+              label={s('Reduce bad luck™')} />
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControlLabel className='Unselectable'
-                              control={<Checkbox/>}
-                              checked={revealCorners}
-                              onChange={e => setRevealCorners(e.target.checked)}
-                              label={s('Reveal corners')} />
+              control={<Checkbox />}
+              checked={revealCorners}
+              onChange={e => setRevealCorners(e.target.checked)}
+              label={s('Reveal corners')} />
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControlLabel className='Unselectable'
-                              control={<Checkbox/>}
-                              checked={annoyingFairies}
-                              onChange={e => setAnnoyingFairies(
-                                                              e.target.checked)}
-                              label={s('Annoying fairies')} />
+              control={<Checkbox />}
+              checked={annoyingFairies}
+              onChange={e => setAnnoyingFairies(
+                e.target.checked)}
+              label={s('Annoying fairies')} />
           </Grid>
           <OptionalBox visible={manualSeed}
-                       toggle={setManualSeed}
-                       textWhenHidden={s('Specify a seed')}
-                       textWhenVisible={s('Use random seed')}>
+            toggle={setManualSeed}
+            textWhenHidden={s('Specify a seed')}
+            textWhenVisible={s('Use random seed')}>
             <ManualSeedBox seed={seed}
-                           setSeed={setSeed}
-                           maxSeed={maxSeed}
-                           errorInSeed={errorInSeed}
-                           s={s} />
+              seedHistory={seedHistory}
+              setSeed={setSeed}
+              maxSeed={maxSeed}
+              errorInSeed={errorInSeed}
+              s={s} />
           </OptionalBox>
           <OptionalBox visible={showLanguages}
-                       toggle={setShowLanguages}
-                       textWhenHidden={s('Modify language')}
-                       textWhenVisible={s('Hide language selection')}>
+            toggle={setShowLanguages}
+            textWhenHidden={s('Modify language')}
+            textWhenVisible={s('Hide language selection')}>
             <LanguageBox language={language} setLanguage={setLanguage} />
           </OptionalBox>
           <Grid item xs={12}>
             <form action="https://www.paypal.com/cgi-bin/webscr"
-                  method="post"
-                  target="_blank">
+              method="post"
+              target="_blank">
               <input type="hidden" name="cmd" value="_s-xclick" />
               <input type="hidden" name="hosted_button_id"
-                     value="2Q5MZ5MJLN976" />
+                value="2Q5MZ5MJLN976" />
               <Link className='Unselectable'
-                    href="#"
-                    onClick={e => {
-                              e.target.closest('form').submit();
-                              e.preventDefault();
-                            }}
-                    variant="body2">
+                href="#"
+                onClick={e => {
+                  e.target.closest('form').submit();
+                  e.preventDefault();
+                }}
+                variant="body2">
                 {s('Donate to the fairies')}
               </Link>
             </form>
@@ -300,8 +322,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
           {s('Cancel')}
         </Button>
         <Button onClick={handleApply}
-                color='primary'
-                disabled={anyError()}>
+          color='primary'
+          disabled={anyError()}>
           {s('New game')}
         </Button>
       </DialogActions>
@@ -341,20 +363,21 @@ ConfigDialog.propTypes = {
     annoyingFairies: PropTypes.bool.isRequired,
     manualSeed: PropTypes.bool.isRequired,
     seed: PropTypes.number,
+    seedHistory: PropTypes.array,
     language: PropTypes.string.isRequired
   }),
   version: PropTypes.string.isRequired
 };
 
-function OptionalBox({visible, toggle, textWhenHidden, textWhenVisible,
-                      children}) {
+function OptionalBox({ visible, toggle, textWhenHidden, textWhenVisible,
+  children }) {
   return (
     <>
       <Grid item xs={12}>
         <Link className='Unselectable'
-              href="#"
-              onClick={e => {toggle(!visible); e.preventDefault(); }}
-              variant="body2">
+          href="#"
+          onClick={e => { toggle(!visible); e.preventDefault(); }}
+          variant="body2">
           {visible ? textWhenVisible : textWhenHidden}
         </Link>
       </Grid>
@@ -363,43 +386,54 @@ function OptionalBox({visible, toggle, textWhenHidden, textWhenVisible,
   );
 }
 
-function ManualSeedBox({seed, setSeed, maxSeed, errorInSeed, s}) {
+function ManualSeedBox({ seed, seedHistory, setSeed, maxSeed, errorInSeed, s }) {
   return (
-    <Grid item xs={12} sm={4}>
-      <FormControl variant='filled' fullWidth>
-        <InputLabel>{s('Manual seed')}</InputLabel>
-        <FilledInput value={seed}
-                     onChange={e => setSeed(e.target.value)}
-                     onFocus={selectTextOnFocus}
-                     error={errorInSeed()}
-                     endAdornment={
-            <InputAdornment position='end'>
-              <IconButton edge='end'
-                          onClick={e => setSeed(calcSeed(-1, maxSeed))}>
-                <Refresh />
-              </IconButton>
-            </InputAdornment>
-          }
-        />
-        <FormHelperText>min 0, max {maxSeed - 1}</FormHelperText>
-      </FormControl>
+    <Grid container spacing={0}>
+      <Grid item xs={12} fullWidth>
+        <FormControl variant='filled'>
+          <InputLabel>{s('Manual seed')}</InputLabel>
+          <Select value={seed}
+            onChange={e => setSeed(e.target.value)}
+            error={errorInSeed()}>
+            <MenuItem key={0} value={seed}>{seed}</MenuItem>
+            <ListSubheader>{s('History')}</ListSubheader>
+            {seedHistory.map((h, i) => <MenuItem key={i} value={h.seed}>{h.seed} | {new Intl.DateTimeFormat("en-GB", {
+              year: "numeric",
+              month: "numeric",
+              day: "2-digit",
+              hour: "numeric",
+              minute: "numeric"
+            }).format(h.time)}</MenuItem>)}
+          </Select>
+          <FormHelperText>min 0, max {maxSeed - 1}</FormHelperText>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12} fullWidth>
+        <FormControl variant='filled'>
+          <Button edge='end'
+            onClick={e => setSeed(calcSeed(-1, maxSeed))}>
+            {s("Generate new seed")}
+            <Refresh />
+          </Button>
+        </FormControl>
+      </Grid>
     </Grid>
-);
+  );
 }
 
-function LanguageBox({language, setLanguage}) {
+function LanguageBox({ language, setLanguage }) {
   return (
     <Grid item xs={12}>
       <FormControl component="fieldset" fullWidth>
         <RadioGroup value={language}
-                    onChange={e => setLanguage(e.target.value)}>
+          onChange={e => setLanguage(e.target.value)}>
           <Grid container spacing={1}>
-            { Object.entries(locales).map(([key, value]) =>
+            {Object.entries(locales).map(([key, value]) =>
               <Grid item xs={12} sm={4} key={key}>
                 <FormControlLabel className='Unselectable'
-                                  value={key}
-                                  control={<Radio />}
-                                  label={value} />
+                  value={key}
+                  control={<Radio />}
+                  label={value} />
               </Grid>
             )}
           </Grid>
