@@ -26,6 +26,9 @@ class XYSet {
   addFromSet(other) {
     other.forEachKey(key => this.add(key));
   }
+  removeElementsOf(other) {
+    other.forEachKey(key => this.deleteKey(key));
+  }
   *entriesKey() {
     const entries = this.set.entries();
     for (const entry of entries)

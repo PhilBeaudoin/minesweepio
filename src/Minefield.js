@@ -2,6 +2,7 @@ import Solver from './Solver'
 import Grid2d from './Grid2d'
 import Pattern from './Pattern'
 import XYSet from './XYSet'
+import poissonDiscSampler from './poissonSampler'
 
 class Minefield {
   constructor(sx, sy, rng) {
@@ -28,15 +29,7 @@ class Minefield {
     return count;
   }
 
-  placeMinesRandomly(totalMines, setToIgnore) {
-    if (setToIgnore === undefined) setToIgnore = new XYSet(this.grid);
-
-    const options = new XYSet(this.grid);
-    this.grid.forEachXYVal((x, y) => {
-      if (!setToIgnore.has(x, y))
-        options.add(x, y);
-    });
-    const mines = options.randomSubset(totalMines, this.rng);
+  placeMinesAndClearInitialField(mines, setToIgnore) {
     this.grid.forEachXYVal((x, y) => {
       if (setToIgnore.has(x, y)) {
         this.grid.setXY(x, y, this.grid.getXY(x, y) === '*' ? '*' : '?');
@@ -52,24 +45,60 @@ class Minefield {
     });
   }
 
+  placeMinesRandomly(totalMines, setToIgnore) {
+    if (setToIgnore === undefined) setToIgnore = new XYSet(this.grid);
+
+    const options = new XYSet(this.grid);
+    this.grid.forEachXYVal((x, y) => {
+      if (!setToIgnore.has(x, y))
+        options.add(x, y);
+    });
+    const mines = options.randomSubset(totalMines, this.rng);
+    this.placeMinesAndClearInitialField(mines, setToIgnore);
+  }
+
+  placeMinesNicely(totalMines, setToIgnore) {
+    // Add a bunch of points determined using a poisson process to the set to
+    // ignore. This means the selected mines will be more lumpy
+    // The 1.5 constant has been determined expermentally to yield good grids
+    const radius = 1.2
+    const newSetToIgnore = new XYSet(this.grid);
+    newSetToIgnore.addFromSet(setToIgnore);
+    for (const p of poissonDiscSampler(this.grid.sx, this.grid.sy, radius,
+                                       this.rng)) {
+      newSetToIgnore.addXY(Math.round(p[0]), Math.round(p[1]));
+    }
+    const numCells = this.grid.sx * this.grid.sy - newSetToIgnore.size
+    if (numCells >= totalMines) {
+      console.log(`Select ${totalMines} mines from ${numCells} cells`);
+      this.placeMinesRandomly(totalMines, newSetToIgnore);
+    } else {
+      console.log(`Only ${numCells} cells remaining for ${totalMines} mines!`);
+      console.log(`Using all the available cells`);
+      this.placeMinesRandomly(totalMines, setToIgnore);
+    }
+  }
+
+
+
   placeMinesNoBadPattern(totalMines, setToIgnore) {
     let patterns = [
-      Pattern.fromString(['*??*',
+      Pattern.fromString(['*??*',     // Pattern 0
                           '?*#?',
                           '?#*?',
                           '*??*']),
-      Pattern.fromString(['***',
+      Pattern.fromString(['***',      // Pattern 1
                           '?*?',
                           '?#?',
                           '***']),
-      Pattern.fromString(['***',
+      Pattern.fromString(['***',      // Pattern 2
                           '?*?',
                           '?#?',
                           '???',
                           '?*?',
                           '?#?',
                           '***']),
-      Pattern.fromString(['***',
+      Pattern.fromString(['***',      // Pattern 3
                           '?*?',
                           '?#?',
                           '???',
@@ -79,6 +108,22 @@ class Minefield {
                           '?*?',
                           '?#?',
                           '***']),
+      Pattern.fromString(['***',      // Pattern 4
+                          '*?*',
+                          '***']),
+      Pattern.fromString(['***',      // Pattern 5
+                          '*?*',
+                          '*?*',
+                          '***']),
+      Pattern.fromString(['***',      // Pattern 6
+                          '*?*',
+                          '*?*',
+                          '*?*',
+                          '***']),
+      Pattern.fromString(['****',     // Pattern 7
+                          '*??*',
+                          '*??*',
+                          '****']),
     ];
     patterns.push(patterns[0].rotate90cw());
     patterns.push(patterns[1].rotate90cw());
@@ -90,9 +135,11 @@ class Minefield {
     patterns.push(patterns[3].rotate90cw());
     patterns.push(patterns[3].rotate90cw().rotate90cw());
     patterns.push(patterns[3].rotate90cw().rotate90cw().rotate90cw());
+    patterns.push(patterns[5].rotate90cw());
+    patterns.push(patterns[6].rotate90cw());
 
     let badGrid = true;
-    this.placeMinesRandomly(totalMines, setToIgnore);
+    this.placeMinesNicely(totalMines, setToIgnore);
     while(badGrid) {
       badGrid = false;
       for (let i = 0; i < patterns.length; ++i) {

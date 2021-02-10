@@ -22,7 +22,7 @@ import {Select, ListSubheader, MenuItem } from '@material-ui/core';
 import genStrLocalizer, { locales } from './Language.js'
 import './ConfigDialog.css';
 
-const MaxHistorySize = 5; 
+const MaxHistorySize = 5;
 
 function calcSeed(smallSeed, maxSeed) {
   const valid = smallSeed >= 0 && smallSeed < maxSeed;
@@ -389,12 +389,13 @@ function OptionalBox({ visible, toggle, textWhenHidden, textWhenVisible,
 function ManualSeedBox({ seed, seedHistory, setSeed, maxSeed, errorInSeed, s }) {
   return (
     <Grid container spacing={0}>
-      <Grid item xs={12} fullWidth>
-        <FormControl variant='filled'>
+      <Grid item xs={12} sm={8} fullWidth>
+        <FormControl variant='filled' fullWidth>
           <InputLabel>{s('Manual seed')}</InputLabel>
           <Select value={seed}
             onChange={e => setSeed(e.target.value)}
-            error={errorInSeed()}>
+            error={errorInSeed()}
+            fullWidth>
             <MenuItem key={0} value={seed}>{seed}</MenuItem>
             <ListSubheader>{s('History')}</ListSubheader>
             {seedHistory.map((h, i) => <MenuItem key={i} value={h.seed}>{h.seed} | {new Intl.DateTimeFormat("en-GB", {
@@ -408,10 +409,11 @@ function ManualSeedBox({ seed, seedHistory, setSeed, maxSeed, errorInSeed, s }) 
           <FormHelperText>min 0, max {maxSeed - 1}</FormHelperText>
         </FormControl>
       </Grid>
-      <Grid item xs={12} fullWidth>
-        <FormControl variant='filled'>
+      <Grid item xs={12} sm={4} fullWidth>
+        <FormControl variant='filled' fullWidth>
           <Button edge='end'
-            onClick={e => setSeed(calcSeed(-1, maxSeed))}>
+            onClick={e => setSeed(calcSeed(-1, maxSeed))}
+            fullWidth>
             {s("Generate new seed")}
             <Refresh />
           </Button>
