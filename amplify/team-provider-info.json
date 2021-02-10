@@ -1,23 +1,23 @@
 {
-    "prod": {
-        "awscloudformation": {
-            "AuthRoleName": "amplify-minesweepio-prod-92516-authRole",
-            "UnauthRoleArn": "arn:aws:iam::504923666478:role/amplify-minesweepio-prod-92516-unauthRole",
-            "AuthRoleArn": "arn:aws:iam::504923666478:role/amplify-minesweepio-prod-92516-authRole",
-            "Region": "us-east-2",
-            "DeploymentBucketName": "amplify-minesweepio-prod-92516-deployment",
-            "UnauthRoleName": "amplify-minesweepio-prod-92516-unauthRole",
-            "StackName": "amplify-minesweepio-prod-92516",
-            "StackId": "arn:aws:cloudformation:us-east-2:504923666478:stack/amplify-minesweepio-prod-92516/711de210-d3fa-11ea-921f-022fd555c652",
-            "AmplifyAppId": "dnwtbs7zf4lyn"
-        },
-        "categories": {
-            "hosting": {
-                "amplifyhosting": {
-                    "appId": "dnwtbs7zf4lyn",
-                    "type": "manual"
-                }
-            }
+  "prod": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-minesweepio-prod-92516-authRole",
+      "UnauthRoleArn": "arn:aws:iam::504923666478:role/amplify-minesweepio-prod-92516-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::504923666478:role/amplify-minesweepio-prod-92516-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-minesweepio-prod-92516-deployment",
+      "UnauthRoleName": "amplify-minesweepio-prod-92516-unauthRole",
+      "StackName": "amplify-minesweepio-prod-92516",
+      "StackId": "arn:aws:cloudformation:us-east-2:504923666478:stack/amplify-minesweepio-prod-92516/711de210-d3fa-11ea-921f-022fd555c652",
+      "AmplifyAppId": "dnwtbs7zf4lyn"
+    },
+    "categories": {
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "dnwtbs7zf4lyn",
+          "type": "manual"
         }
+      }
     }
+  }
 }

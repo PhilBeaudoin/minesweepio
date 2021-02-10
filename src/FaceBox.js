@@ -30,10 +30,7 @@ function FaceBox({ isWorried, hasExploded, isSuccess,
       e.preventDefault();
       e.target.releasePointerCapture(e.pointerId);
       if (isInside) {
-        if (hasExploded || isSuccess)
-          restartBoard();
-        else
-          setShowConfig(true);
+        setShowConfig(true);
       }
       setIsClicking(false);
       setIsInside(false);
