@@ -25,6 +25,7 @@ const defaultConfig = {
   'revealCorners': false,
   'annoyingFairies': false,
   'manualSeed': false,
+  'seedHistory': [],
   'language': 'en'
 };
 

@@ -15,6 +15,8 @@ const localizations = {
   "Annoying fairies": {fr: "Fées gossantes"},
   "Specify a seed": {fr: "Spécifier une seed"},
   "Use random seed": {fr: "Utiliser une seed aléatoire"},
+  "Generate new seed":{fr: "Générer une nouvelle seed"},
+  "History":{fr: "Historique"},
   "Modify language": {fr: "Modifier la langue"},
   "Hide language selection": {fr: "Cacher les langues"},
   "Donate to the fairies": {fr: "Faire un don aux fées"},
