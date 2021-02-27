@@ -9,6 +9,8 @@ const localizations = {
   "Size": {fr: "Taille"},
   "Number of mines": {fr: "Nombre de mines"},
   "Number of fairies": {fr: "Nombre de fées"},
+  "Algorithm": {fr: "Algorithme"},
+  "Pure random": {fr: "Aléatoire pur"},
   "Always logical": {fr: "Toujours logique"},
   "Reduce bad luck™": {fr: "Malchance réduite™"},
   "Reveal corners": {fr: "Révéler les coins"},
