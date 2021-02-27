@@ -49,6 +49,16 @@ class XYSet {
   delete() { return this.select(arguments, this.deleteKey.bind(this), this.deleteXY.bind(this)); }
 
   // Advanced methods below
+  toXYShuffledArray(rng) {
+    const result = [];
+    this.forEachXY((x, y) => result.push([x, y]));
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+
   randomSubset(n, rng) {
     if (rng === undefined) rng = Math.random;
     let result = new XYSet(this.grid);

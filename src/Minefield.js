@@ -93,14 +93,14 @@ class Minefield {
         if (!newSetToIgnore.has(x, y))
           options.add(x, y);
       });
-      const selected = options.randomSubset(totalMines, this.rng);
-      selected.forEachXYKey((x, y, key) => {
+      const selected = options.randomSubset(Math.ceil(area/30), this.rng);
+      selected.toXYShuffledArray(this.rng).forEach(([x, y]) => {
         if (area - newSetToIgnore.size === totalMines) return;
         this.grid.forEachNeighbor(x, y, (xx, yy) => {
           if (selected.hasXY(xx, yy) || newSetToIgnore.hasXY(xx, yy))
-            newSetToIgnore.addKey(key);
+            newSetToIgnore.addXY(x, y);
         });
-      })
+      });
     }
     console.log('area - newSetToIgnore.size: ', area - newSetToIgnore.size);
     this.placeMinesRandomly(totalMines, newSetToIgnore)
