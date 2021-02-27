@@ -10,23 +10,20 @@ import Link from '@material-ui/core/Link';
 import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import InputLabel from '@material-ui/core/InputLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
 import Typography from '@material-ui/core/Typography';
 import Refresh from '@material-ui/icons/Refresh';
-import {Select, ListSubheader, MenuItem } from '@material-ui/core';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 
 import genStrLocalizer, { locales } from './Language.js'
 import './ConfigDialog.css';
 
-const MaxHistorySize = 5;
 
-function calcSeed(smallSeed, maxSeed) {
-  const valid = smallSeed >= 0 && smallSeed < maxSeed;
-  return Math.floor((valid ? smallSeed : Math.random()) * maxSeed);
+function calcSeed(seed, maxSeed) {
+  const valid = Number.isInteger(seed) && seed >= 0 && seed < maxSeed;
+  return valid ? seed : Math.floor(Math.random() * maxSeed);
 }
 
 const selectTextOnFocus = event => {
@@ -168,23 +165,6 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       return;
     }
 
-    if (seedHistory.length >= MaxHistorySize)
-      seedHistory.shift();
-
-    let newSeed = 0;
-    if (manualSeed) {
-      if (seedHistory.find((h) => h.seed === seed)) {
-        newSeed = seed;
-      } else {
-        newSeed = seed;
-        seedHistory.push({ seed: newSeed, time: Date.now() });
-      }
-    } else {
-      newSeed = Math.floor(Math.random() * maxSeed);
-      seedHistory.push({ seed: newSeed, time: Date.now() });
-    }
-
-
     onApply({
       size,
       numMines: Number.parseInt(numMines),
@@ -194,7 +174,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       revealCorners,
       annoyingFairies,
       manualSeed,
-      seed: newSeed / maxSeed,
+      seed: manualSeed ? parseInt(seed) : Math.floor(Math.random() * maxSeed),
       seedHistory: seedHistory,
       language
     });
@@ -283,7 +263,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
           <OptionalBox visible={manualSeed}
             toggle={setManualSeed}
             textWhenHidden={s('Specify a seed')}
-            textWhenVisible={s('Use random seed')}>
+            textWhenVisible={s('Do not specify a seed')}>
             <ManualSeedBox seed={seed}
               seedHistory={seedHistory}
               setSeed={setSeed}
@@ -386,35 +366,56 @@ function OptionalBox({ visible, toggle, textWhenHidden, textWhenVisible,
   );
 }
 
+function historicSeedToOption(historicSeed) {
+  const dateString = historicSeed.time === undefined ? '' :
+    new Intl.DateTimeFormat("en-GB", {
+      year: "numeric",
+      month: "numeric",
+      day: "2-digit",
+      hour: "numeric",
+      minute: "numeric"}).format(historicSeed.time);
+  return (
+    <React.Fragment>
+      {historicSeed.seed}
+      <span style={{color:'gray'}}>
+        &nbsp;&nbsp;{historicSeed.time === undefined ? '' : `(${dateString})`}
+      </span>
+    </React.Fragment>
+  )
+}
+
 function ManualSeedBox({ seed, seedHistory, setSeed, maxSeed, errorInSeed, s }) {
   return (
     <Grid container spacing={0}>
-      <Grid item xs={12} sm={8} fullWidth>
-        <FormControl variant='filled' fullWidth>
-          <InputLabel>{s('Manual seed')}</InputLabel>
-          <Select value={seed}
-            onChange={e => setSeed(e.target.value)}
-            error={errorInSeed()}
-            fullWidth>
-            <MenuItem key={0} value={seed}>{seed}</MenuItem>
-            <ListSubheader>{s('History')}</ListSubheader>
-            {seedHistory.map((h, i) => <MenuItem key={i} value={h.seed}>{h.seed} | {new Intl.DateTimeFormat("en-GB", {
-              year: "numeric",
-              month: "numeric",
-              day: "2-digit",
-              hour: "numeric",
-              minute: "numeric"
-            }).format(h.time)}</MenuItem>)}
-          </Select>
-          <FormHelperText>min 0, max {maxSeed - 1}</FormHelperText>
-        </FormControl>
+      <Grid item xs={12} sm={8}>
+          <Autocomplete
+              freeSolo
+              value={{seed: `${seed}`}}
+              onChange={(e, newValue) => newValue === null ? '' : setSeed(newValue.seed)}
+              onInputChange={(e, newValue) => setSeed(newValue)}
+              selectOnFocus
+              clearOnBlur
+              handleHomeEndKeys
+              disableClearable
+              options={seedHistory}
+              getOptionLabel={(historicSeed) => `${historicSeed.seed}`}
+              renderOption={(historicSeed) => historicSeedToOption(historicSeed)}
+              renderInput={(params) =>
+                <TextField {...params}
+                           error={errorInSeed()}
+                           label={s('Manual seed')}
+                           variant="filled"
+                           helperText={`min 0, max ${maxSeed - 1}`}
+                           fullWidth />
+              }
+            />
       </Grid>
-      <Grid item xs={12} sm={4} fullWidth>
+      <Grid item xs={12} sm={4} >
         <FormControl variant='filled' fullWidth>
           <Button edge='end'
             onClick={e => setSeed(calcSeed(-1, maxSeed))}
             fullWidth>
-            {s("Generate new seed")}
+            {s("Generate a new seed")}
             <Refresh />
           </Button>
         </FormControl>

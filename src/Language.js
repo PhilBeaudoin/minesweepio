@@ -14,8 +14,8 @@ const localizations = {
   "Reveal corners": {fr: "Révéler les coins"},
   "Annoying fairies": {fr: "Fées gossantes"},
   "Specify a seed": {fr: "Spécifier une seed"},
-  "Use random seed": {fr: "Utiliser une seed aléatoire"},
-  "Generate new seed":{fr: "Générer une nouvelle seed"},
+  "Do not specify a seed": {fr: "Ne pas spécifier de seed"},
+  "Generate a new seed":{fr: "Générer une nouvelle seed"},
   "History":{fr: "Historique"},
   "Modify language": {fr: "Modifier la langue"},
   "Hide language selection": {fr: "Cacher les langues"},
@@ -174,4 +174,3 @@ function genStrLocalizer(locale) {
 }
 
 export default genStrLocalizer;
-

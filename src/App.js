@@ -13,8 +13,8 @@ import Minefield from './Minefield';
 import Solver from './Solver';
 
 const autosolve = false;
-const maxSeed = 1000000;
-const version = 'v 1.13';
+const maxSeed = 10000000;
+const version = 'v 1.15';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -32,6 +32,11 @@ const defaultConfig = {
 const sizeBounds = { min: {x: 9, y: 9}, max: {x: 59, y: 30} }
 const numMinesBoundsRaw = { min: 10, max: 0.33898 }
 const maxUndos = 100;
+const maxHistorySize = 6;
+
+function isIntBetween(number, min, max) {
+  return Number.isInteger(number) && number >= min && number <= max;
+}
 
 function calcNumMinesBounds(size) {
   return { min: numMinesBoundsRaw.min,
@@ -40,22 +45,22 @@ function calcNumMinesBounds(size) {
 
 function validateSize(size) {
   return typeof(size) === 'object' &&
-         Number.isInteger(size.x) && Number.isInteger(size.y) &&
-         size.x >= sizeBounds.min.x && size.x <= sizeBounds.max.x &&
-         size.y >= sizeBounds.min.y && size.y <= sizeBounds.max.y;
+         isIntBetween(size.x, sizeBounds.min.x, sizeBounds.max.x) &&
+         isIntBetween(size.y, sizeBounds.min.y, sizeBounds.max.y);
 }
 
 function validateNumMines(numMines, size) {
   if (!validateSize(size)) return false;
   const numMinesBounds = calcNumMinesBounds(size);
-  return Number.isInteger(numMines) &&
-         numMines >= numMinesBounds.min && numMines <= numMinesBounds.max;
+  return isIntBetween(numMines, numMinesBounds.min, numMinesBounds.max);
 }
 
 function validateConfig(config) {
   return validateSize(config.size) &&
          validateNumMines(config.numMines, config.size) &&
-         (config.numUndos >= 0 && config.numUndos <= maxUndos) &&
+         isIntBetween(config.seed, 0, maxSeed) &&
+         isIntBetween(config.numUndos, 0, maxUndos) &&
+         config.seedHistory.length <= maxHistorySize &&
          typeof(config.isLogic) === 'boolean' &&
          typeof(config.hasNoFiftyFifty) === 'boolean' &&
          typeof(config.revealCorners) === 'boolean' &&
@@ -68,8 +73,10 @@ const configVarName = 'config';
 function getConfigFromStorage() {
   try {
     const config = JSON.parse(localStorage.getItem(configVarName));
-    config.seed = calcRandomSeed();
-    if (validateConfig(config)) return config;
+    config.seed = calcRandomSeed()
+    if (validateConfig(config)) {
+      return config;
+    }
   } catch(err) {}
   localStorage.clear();
   return defaultConfig;
@@ -80,12 +87,22 @@ function setConfigInStorage(config) {
     localStorage.setItem(configVarName, JSON.stringify(config));
 }
 
+function addSeedToHistory(config) {
+  if (!config.seedHistory.find((h) => h.seed === config.seed)) {
+    if (config.seedHistory.length >= maxHistorySize)
+      config.seedHistory.pop();
+    config.seedHistory.unshift({ seed: config.seed, time: Date.now() });
+    setConfigInStorage(config)
+  }
+}
+
 function createMinefield(config) {
+  addSeedToHistory(config)
   const center = {
     x: Math.floor(config.size.x/2),
     y: Math.floor(config.size.y/2),
   }
-  const rng = new alea(config.seed);
+  const rng = new alea(config.seed / maxSeed);
   const mf = new Minefield(config.size.x, config.size.y, rng);
   const setToIgnore = new XYSet(mf.grid);
   if (config.revealCorners) {
@@ -112,7 +129,7 @@ function createMinefield(config) {
 }
 
 function calcRandomSeed() {
-  return Math.floor(Math.random() * maxSeed) / maxSeed;
+  return Math.floor(Math.random() * maxSeed);
 }
 
 function App() {
@@ -160,8 +177,8 @@ function App() {
   const restartBoard = useCallback(() => {
     setCurrentConfig(null);
     if (!targetConfig.manualSeed)
-      targetConfig.seed = calcRandomSeed();
-  }, [targetConfig.manualSeed, targetConfig.seed]);
+      targetConfig.seed = calcRandomSeed()
+  }, [targetConfig]);
 
   const revealAt = useCallback((active, set) => {
     let touchedMine = false;
