@@ -11,6 +11,7 @@ import ConfigDialog from './ConfigDialog';
 import FairyDialog from './FairyDialog';
 import Minefield from './Minefield';
 import Solver from './Solver';
+import ALGO from './algoTypes.js';
 
 const autosolve = false;
 const maxSeed = 10000000;
@@ -20,8 +21,7 @@ const defaultConfig = {
   'size': {x: 9, y: 9} ,
   'numMines': 10,
   'numUndos': 0,
-  'isLogic': false,
-  'hasNoFiftyFifty': false,
+  'algorithm': ALGO.RANDOM,
   'revealCorners': false,
   'annoyingFairies': false,
   'manualSeed': false,
@@ -58,11 +58,10 @@ function validateNumMines(numMines, size) {
 function validateConfig(config) {
   return validateSize(config.size) &&
          validateNumMines(config.numMines, config.size) &&
-         isIntBetween(config.seed, 0, maxSeed) &&
+         isIntBetween(config.seed, 0, maxSeed - 1) &&
          isIntBetween(config.numUndos, 0, maxUndos) &&
          config.seedHistory.length <= maxHistorySize &&
-         typeof(config.isLogic) === 'boolean' &&
-         typeof(config.hasNoFiftyFifty) === 'boolean' &&
+         ALGO.isValid(config.algorithm) &&
          typeof(config.revealCorners) === 'boolean' &&
          typeof(config.annoyingFairies) === 'boolean' &&
          typeof(config.manualSeed) === 'boolean' &&
@@ -117,10 +116,17 @@ function createMinefield(config) {
   }
   mf.grid.forCellsInRing(center.x, center.y, 1,
       (x, y) => setToIgnore.add(x, y));
-  if (config.isLogic) {
+  if (config.algorithm === ALGO.ALWAYS_LOGICAL) {
     mf.placeMinesLogically(center.x, center.y, config.numMines, setToIgnore);
-  } else if (config.hasNoFiftyFifty) {
-    mf.placeMinesNoBadPattern(config.numMines, setToIgnore);
+  } else if (config.algorithm === ALGO.REDUCE_BADLUCK) {
+    mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
+                              mf.placeMinesRandomly.bind(mf));
+  } else if (config.algorithm === ALGO.SPACED_OUT) {
+    mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
+                              mf.placeMinesPoisson.bind(mf));
+  } else if (config.algorithm === ALGO.BIG_EMPTY_ZONES) {
+    mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
+                              mf.placeMinesBigZones.bind(mf));
   } else {
     mf.placeMinesRandomly(config.numMines, setToIgnore);
   }

@@ -13,6 +13,8 @@ const localizations = {
   "Pure random": {fr: "Aléatoire pur"},
   "Always logical": {fr: "Toujours logique"},
   "Reduce bad luck™": {fr: "Malchance réduite™"},
+  "Well spaced out mines": {fr: "Mines bien espacées"},
+  "Big empty zones": {fr: "Grandes zones dégagées"},
   "Reveal corners": {fr: "Révéler les coins"},
   "Annoying fairies": {fr: "Fées gossantes"},
   "Specify a seed": {fr: "Spécifier une seed"},

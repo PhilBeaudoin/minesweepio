@@ -45,43 +45,68 @@ class Minefield {
     });
   }
 
-  placeMinesRandomly(totalMines, setToIgnore) {
+  placeMinesRandomly(totalMines, setToIgnore, currMines) {
     if (setToIgnore === undefined) setToIgnore = new XYSet(this.grid);
+    if (currMines === undefined) currMines = new XYSet(this.grid);
 
     const options = new XYSet(this.grid);
     this.grid.forEachXYVal((x, y) => {
-      if (!setToIgnore.has(x, y))
+      if (!setToIgnore.has(x, y) && !currMines.has(x, y))
         options.add(x, y);
     });
-    const mines = options.randomSubset(totalMines, this.rng);
+    const mines = options.randomSubset(totalMines - currMines.size, this.rng);
+    mines.addFromSet(currMines);
     this.placeMinesAndClearInitialField(mines, setToIgnore);
   }
 
-  placeMinesNicely(totalMines, setToIgnore) {
-    // Add a bunch of points determined using a poisson process to the set to
-    // ignore. This means the selected mines will be more lumpy
-    // The 1.5 constant has been determined expermentally to yield good grids
-    const radius = 1.2
-    const newSetToIgnore = new XYSet(this.grid);
-    newSetToIgnore.addFromSet(setToIgnore);
+  placeMinesPoisson(totalMines, setToIgnore) {
+    // Select mine using a poisson process
+    // The function has been determined experimentally to yield roughly the
+    // right number of mines.
+    const radius = Math.sqrt(this.grid.sx * this.grid.sy * 0.6 / totalMines);
+    const options = new XYSet(this.grid);
     for (const p of poissonDiscSampler(this.grid.sx, this.grid.sy, radius,
                                        this.rng)) {
-      newSetToIgnore.addXY(Math.round(p[0]), Math.round(p[1]));
+      const [x, y] = [Math.floor(p[0]), Math.floor(p[1])];
+      if (!setToIgnore.has(x, y))
+        options.addXY(x, y);
     }
-    const numCells = this.grid.sx * this.grid.sy - newSetToIgnore.size
-    if (numCells >= totalMines) {
-      console.log(`Select ${totalMines} mines from ${numCells} cells`);
-      this.placeMinesRandomly(totalMines, newSetToIgnore);
+    if (options.size >= totalMines) {
+      console.log(`Got ${options.size} options for ${totalMines} mines.`);
+      console.log(`Selecting random subset.`);
+      const mines = options.randomSubset(totalMines, this.rng);
+      this.placeMinesAndClearInitialField(mines, setToIgnore);
     } else {
-      console.log(`Only ${numCells} cells remaining for ${totalMines} mines!`);
-      console.log(`Using all the available cells`);
-      this.placeMinesRandomly(totalMines, setToIgnore);
+      console.log(`Only ${options.size} options for ${totalMines} mines!`);
+      console.log(`Adding more randomly.`);
+      this.placeMinesRandomly(totalMines, setToIgnore, options);
     }
   }
 
+  placeMinesBigZones(totalMines, setToIgnore) {
+    const newSetToIgnore = new XYSet(this.grid);
+    newSetToIgnore.addFromSet(setToIgnore);
+    const area = this.grid.sx * this.grid.sy;
+    while (area - newSetToIgnore.size > totalMines) {
+      const options = new XYSet(this.grid);
+      this.grid.forEachXYVal((x, y) => {
+        if (!newSetToIgnore.has(x, y))
+          options.add(x, y);
+      });
+      const selected = options.randomSubset(totalMines, this.rng);
+      selected.forEachXYKey((x, y, key) => {
+        if (area - newSetToIgnore.size === totalMines) return;
+        this.grid.forEachNeighbor(x, y, (xx, yy) => {
+          if (selected.hasXY(xx, yy) || newSetToIgnore.hasXY(xx, yy))
+            newSetToIgnore.addKey(key);
+        });
+      })
+    }
+    console.log('area - newSetToIgnore.size: ', area - newSetToIgnore.size);
+    this.placeMinesRandomly(totalMines, newSetToIgnore)
+  }
 
-
-  placeMinesNoBadPattern(totalMines, setToIgnore) {
+  placeMinesNoBadPattern(totalMines, setToIgnore, placerFunction) {
     let patterns = [
       Pattern.fromString(['*??*',     // Pattern 0
                           '?*#?',
@@ -139,7 +164,7 @@ class Minefield {
     patterns.push(patterns[6].rotate90cw());
 
     let badGrid = true;
-    this.placeMinesNicely(totalMines, setToIgnore);
+    placerFunction(totalMines, setToIgnore);
     while(badGrid) {
       badGrid = false;
       for (let i = 0; i < patterns.length; ++i) {
