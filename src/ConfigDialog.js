@@ -16,10 +16,17 @@ import Radio from '@material-ui/core/Radio';
 import Typography from '@material-ui/core/Typography';
 import Refresh from '@material-ui/icons/Refresh';
 import Autocomplete from '@material-ui/lab/Autocomplete';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
+
 
 import genStrLocalizer, { locales } from './Language.js'
 import './ConfigDialog.css';
 
+const ALGO_RANDOM = 0
+const ALGO_ALWAYS_LOGICAL = 1
+const ALGO_REDUCE_BADLUCK = 2
 
 function calcSeed(seed, maxSeed) {
   const valid = Number.isInteger(seed) && seed >= 0 && seed < maxSeed;
@@ -33,6 +40,17 @@ const selectTextOnFocus = event => {
   target.setSelectionRange(0, target.value.length);
 };
 
+function getAlgoFromConfig(config) {
+  if (config.isLogic) return ALGO_ALWAYS_LOGICAL;
+  if (config.hasNoFiftyFifty) return ALGO_REDUCE_BADLUCK;
+  return ALGO_RANDOM;
+}
+
+function setConfigFromAlgo(config, algo) {
+  config.isLogic = (algo === ALGO_ALWAYS_LOGICAL);
+  config.hasNoFiftyFifty = (algo === ALGO_REDUCE_BADLUCK);
+}
+
 function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   calcNumMinesBounds, validateSize, validateNumMines,
   maxUndos, maxSeed, version }) {
@@ -40,9 +58,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const [size, setSize] = useState(config.size);
   const [numMines, setNumMines] = useState(config.numMines);
   const [numUndos, setNumUndos] = useState(config.numUndos);
-  const [isLogic, setIsLogic] = useState(config.isLogic);
-  const [hasNoFiftyFifty, setHasNoFiftyFifty] =
-    useState(config.hasNoFiftyFifty);
+  const [algorithm, setAlgorithm] = useState(getAlgoFromConfig(config));
   const [revealCorners, setRevealCorners] = useState(config.revealCorners);
   const [annoyingFairies, setAnnoyingFairies] =
     useState(config.annoyingFairies);
@@ -62,8 +78,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       setSize(config.size);
       setNumMines(config.numMines);
       setNumUndos(config.numUndos);
-      setIsLogic(config.isLogic);
-      setHasNoFiftyFifty(config.hasNoFiftyFifty);
+      setAlgorithm(getAlgoFromConfig(config));
       setRevealCorners(config.revealCorners);
       setAnnoyingFairies(config.annoyingFairies);
       setManualSeed(config.manualSeed);
@@ -165,19 +180,19 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       return;
     }
 
-    onApply({
+    const config = {
       size,
       numMines: Number.parseInt(numMines),
       numUndos: Number.parseInt(numUndos),
-      isLogic,
-      hasNoFiftyFifty,
       revealCorners,
       annoyingFairies,
       manualSeed,
       seed: manualSeed ? parseInt(seed) : Math.floor(Math.random() * maxSeed),
-      seedHistory: seedHistory,
+      seedHistory,
       language
-    });
+    };
+    setConfigFromAlgo(config, algorithm);
+    onApply(config);
   };
 
   // Dialog
@@ -229,21 +244,17 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
               error={errorInNumUndos()}
               helperText={numUndosErrorText()} />
           </Grid>
-          <Grid item xs={12} sm={4}>
-            <FormControlLabel className='Unselectable'
-              control={<Checkbox />}
-              checked={isLogic}
-              onChange={e => setIsLogic(e.target.checked)}
-              label={s('Always logical')} />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <FormControlLabel className='Unselectable'
-              control={<Checkbox />}
-              disabled={isLogic}
-              checked={hasNoFiftyFifty || isLogic}
-              onChange={e => setHasNoFiftyFifty(
-                e.target.checked)}
-              label={s('Reduce bad luck™')} />
+          <Grid item xs={12} sm={12}>
+            <FormControl variant="filled" fullWidth>
+              <InputLabel>{s('Algorithm')}</InputLabel>
+              <Select
+                value={algorithm}
+                onChange={(e) => {setAlgorithm(e.target.value);}}>
+                <MenuItem value={ALGO_RANDOM}>{s('Pure random')}</MenuItem>
+                <MenuItem value={ALGO_ALWAYS_LOGICAL}>{s('Always logical')}</MenuItem>
+                <MenuItem value={ALGO_REDUCE_BADLUCK}>{s('Reduce bad luck™')}</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControlLabel className='Unselectable'
