@@ -20,13 +20,9 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 
-
 import genStrLocalizer, { locales } from './Language.js'
 import './ConfigDialog.css';
-
-const ALGO_RANDOM = 0
-const ALGO_ALWAYS_LOGICAL = 1
-const ALGO_REDUCE_BADLUCK = 2
+import ALGO from './algoTypes.js';
 
 function calcSeed(seed, maxSeed) {
   const valid = Number.isInteger(seed) && seed >= 0 && seed < maxSeed;
@@ -40,17 +36,6 @@ const selectTextOnFocus = event => {
   target.setSelectionRange(0, target.value.length);
 };
 
-function getAlgoFromConfig(config) {
-  if (config.isLogic) return ALGO_ALWAYS_LOGICAL;
-  if (config.hasNoFiftyFifty) return ALGO_REDUCE_BADLUCK;
-  return ALGO_RANDOM;
-}
-
-function setConfigFromAlgo(config, algo) {
-  config.isLogic = (algo === ALGO_ALWAYS_LOGICAL);
-  config.hasNoFiftyFifty = (algo === ALGO_REDUCE_BADLUCK);
-}
-
 function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   calcNumMinesBounds, validateSize, validateNumMines,
   maxUndos, maxSeed, version }) {
@@ -58,7 +43,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
   const [size, setSize] = useState(config.size);
   const [numMines, setNumMines] = useState(config.numMines);
   const [numUndos, setNumUndos] = useState(config.numUndos);
-  const [algorithm, setAlgorithm] = useState(getAlgoFromConfig(config));
+  const [algorithm, setAlgorithm] = useState(config.algorithm);
   const [revealCorners, setRevealCorners] = useState(config.revealCorners);
   const [annoyingFairies, setAnnoyingFairies] =
     useState(config.annoyingFairies);
@@ -78,7 +63,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       setSize(config.size);
       setNumMines(config.numMines);
       setNumUndos(config.numUndos);
-      setAlgorithm(getAlgoFromConfig(config));
+      setAlgorithm(config.algorithm);
       setRevealCorners(config.revealCorners);
       setAnnoyingFairies(config.annoyingFairies);
       setManualSeed(config.manualSeed);
@@ -180,19 +165,18 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
       return;
     }
 
-    const config = {
+    onApply({
       size,
       numMines: Number.parseInt(numMines),
       numUndos: Number.parseInt(numUndos),
+      algorithm,
       revealCorners,
       annoyingFairies,
       manualSeed,
       seed: manualSeed ? parseInt(seed) : Math.floor(Math.random() * maxSeed),
       seedHistory,
       language
-    };
-    setConfigFromAlgo(config, algorithm);
-    onApply(config);
+    });
   };
 
   // Dialog
@@ -250,9 +234,11 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
               <Select
                 value={algorithm}
                 onChange={(e) => {setAlgorithm(e.target.value);}}>
-                <MenuItem value={ALGO_RANDOM}>{s('Pure random')}</MenuItem>
-                <MenuItem value={ALGO_ALWAYS_LOGICAL}>{s('Always logical')}</MenuItem>
-                <MenuItem value={ALGO_REDUCE_BADLUCK}>{s('Reduce bad luck™')}</MenuItem>
+                <MenuItem value={ALGO.RANDOM}>{s('Pure random')}</MenuItem>
+                <MenuItem value={ALGO.ALWAYS_LOGICAL}>{s('Always logical')}</MenuItem>
+                <MenuItem value={ALGO.REDUCE_BADLUCK}>{s('Reduce bad luck™')}</MenuItem>
+                <MenuItem value={ALGO.SPACED_OUT}>{s('Well spaced out mines')}</MenuItem>
+                <MenuItem value={ALGO.BIG_EMPTY_ZONES}>{s('Big empty zones')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -348,8 +334,7 @@ ConfigDialog.propTypes = {
     }),
     numMines: PropTypes.number.isRequired,
     numUndos: PropTypes.number.isRequired,
-    isLogic: PropTypes.bool.isRequired,
-    hasNoFiftyFifty: PropTypes.bool.isRequired,
+    algorithm: PropTypes.number.isRequired,
     revealCorners: PropTypes.bool.isRequired,
     annoyingFairies: PropTypes.bool.isRequired,
     manualSeed: PropTypes.bool.isRequired,
