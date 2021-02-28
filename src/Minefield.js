@@ -93,8 +93,11 @@ class Minefield {
         if (!newSetToIgnore.has(x, y))
           options.add(x, y);
       });
+      console.log('area - newSetToIgnore.size - totalMines: ', area - newSetToIgnore.size - totalMines);
+      console.log('Math.ceil(area / 15): ', Math.ceil(area / 15));
       const seeds = options.randomSubset(
-        Math.min(Math.ceil(area / 15), area - newSetToIgnore.size), this.rng);
+        Math.min(Math.ceil(area / 15), area - newSetToIgnore.size - totalMines),
+        this.rng);
       newSetToIgnore.addFromSet(seeds);
       const randArray = options.toXYShuffledArray(this.rng);
       for(let i = 0; i < randArray.length; ++i) {
