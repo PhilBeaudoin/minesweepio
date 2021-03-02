@@ -83,7 +83,7 @@ class Minefield {
     }
   }
 
-  placeMinesBigZones(totalMines, setToIgnore) {
+  placeMinesEmptyZones(totalMines, areaToSeedRatio, setToIgnore) {
     const newSetToIgnore = new XYSet(this.grid);
     newSetToIgnore.addFromSet(setToIgnore);
     const area = this.grid.sx * this.grid.sy;
@@ -94,9 +94,9 @@ class Minefield {
           options.add(x, y);
       });
       console.log('area - newSetToIgnore.size - totalMines: ', area - newSetToIgnore.size - totalMines);
-      console.log('Math.ceil(area / 15): ', Math.ceil(area / 15));
+      console.log(`Math.ceil(area / ${areaToSeedRatio}): `, Math.ceil(area / areaToSeedRatio));
       const seeds = options.randomSubset(
-        Math.min(Math.ceil(area / 15), area - newSetToIgnore.size - totalMines),
+        Math.min(Math.ceil(area / areaToSeedRatio), area - newSetToIgnore.size - totalMines),
         this.rng);
       newSetToIgnore.addFromSet(seeds);
       const randArray = options.toXYShuffledArray(this.rng);
@@ -112,6 +112,18 @@ class Minefield {
     }
     console.log('area - newSetToIgnore.size: ', area - newSetToIgnore.size);
     this.placeMinesRandomly(totalMines, newSetToIgnore)
+  }
+
+  placeMinesSmallZones(totalMines, setToIgnore) {
+    this.placeMinesEmptyZones(totalMines, 5, setToIgnore)
+  }
+
+  placeMinesMediumZones(totalMines, setToIgnore) {
+    this.placeMinesEmptyZones(totalMines, 10, setToIgnore)
+  }
+
+  placeMinesBigZones(totalMines, setToIgnore) {
+    this.placeMinesEmptyZones(totalMines, 15, setToIgnore)
   }
 
   placeMinesNoBadPattern(totalMines, setToIgnore, placerFunction) {

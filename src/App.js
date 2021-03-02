@@ -15,7 +15,7 @@ import ALGO from './algoTypes.js';
 
 const autosolve = false;
 const maxSeed = 10000000;
-const version = 'v 1.16';
+const version = 'v 1.17';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -124,6 +124,12 @@ function createMinefield(config) {
   } else if (config.algorithm === ALGO.SPACED_OUT) {
     mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
                               mf.placeMinesPoisson.bind(mf));
+  } else if (config.algorithm === ALGO.SMALL_EMPTY_ZONES) {
+    mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
+                              mf.placeMinesSmallZones.bind(mf));
+  } else if (config.algorithm === ALGO.MEDIUM_EMPTY_ZONES) {
+    mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
+                              mf.placeMinesMediumZones.bind(mf));
   } else if (config.algorithm === ALGO.BIG_EMPTY_ZONES) {
     mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
                               mf.placeMinesBigZones.bind(mf));
