@@ -15,7 +15,7 @@ import ALGO from './algoTypes.js';
 
 const autosolve = false;
 const maxSeed = 10000000;
-const version = 'v 1.18';
+const version = 'v 1.19';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -139,9 +139,9 @@ function createMinefield(config) {
   } else if (config.algorithm === ALGO.LOTS_OF_SEVEN) {
     mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
             mf.placeMinesScoringDigit.bind(mf, [1, 1, 1, 0, 0, 0, 0, 10, 0]));
-  } else if (config.algorithm === ALGO.LOTS_OF_SEVEN) {
+  } else if (config.algorithm === ALGO.FAVOR_SMALL) {
     mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
-                              mf.placeMinesScoringDigit.bind(mf));
+      mf.placeMinesScoringDigit.bind(mf, [20, 15, 10, 3, 2, 1, 0, 0, 0]));
   } else {
     mf.placeMinesRandomly(config.numMines, setToIgnore);
   }
@@ -310,6 +310,19 @@ function App() {
       }
     }
   }, [mf]);
+
+  useEffect(() => {
+    if(mfComplete) {
+      console.log(`0: ${mf.countVals('0')}`);
+      console.log(`1: ${mf.countVals('1')}`);
+      console.log(`2: ${mf.countVals('2')}`);
+      console.log(`3: ${mf.countVals('3')}`);
+      console.log(`4: ${mf.countVals('4')}`);
+      console.log(`5: ${mf.countVals('5')}`);
+      console.log(`6: ${mf.countVals('6')}`);
+      console.log(`7: ${mf.countVals('7')}`);
+    }
+  }, [mf, mfComplete]);
 
   const applyConfig = (config) => {
     setShowConfig(false);

@@ -136,6 +136,7 @@ class Minefield {
     const area = this.grid.sx * this.grid.sy;
 
     let lastBestScore = 10000;
+    let retries = 3;
     while(true) {
       this.clearDigits();
       const minesToPlace = totalMines - this.countMinesInSet(lockedSet);
@@ -148,8 +149,11 @@ class Minefield {
       }
       this.placeMinesRandomly(minesToPlace, lockedSet);
       if (lastBestScore === 0) {
-        this.numMines = totalMines;
-        return;
+        if (retries === 0) {
+          this.numMines = totalMines;
+          return;
+        }
+        retries--;
       }
       this.computeAllDigits();
       // Generate 20 square groups of 9x9
