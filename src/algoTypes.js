@@ -6,7 +6,9 @@ const ALGO = {
   SMALL_EMPTY_ZONES: 4,
   MEDIUM_EMPTY_ZONES: 5,
   BIG_EMPTY_ZONES: 6,
-  isValid: (algo) => Number.isInteger(algo) && algo >= 0 && algo <= 6
+  LOTS_OF_SIX: 7,
+  LOTS_OF_SEVEN: 8,
+  isValid: (algo) => Number.isInteger(algo) && algo >= 0 && algo <= 8
 }
 
 export default ALGO;
