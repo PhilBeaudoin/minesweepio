@@ -17,6 +17,8 @@ const localizations = {
   "Small empty zones": {fr: "Zones dégagées (petites)"},
   "Medium empty zones": {fr: "Zones dégagées (medium)"},
   "Big empty zones": {fr: "Zones dégagées (grandes)"},
+  "Orgy of six": {fr: "Orgie de six"},
+  "Orgy of seven": {fr: "Orgie de sept"},
   "Reveal corners": {fr: "Révéler les coins"},
   "Annoying fairies": {fr: "Fées gossantes"},
   "Specify a seed": {fr: "Spécifier une seed"},

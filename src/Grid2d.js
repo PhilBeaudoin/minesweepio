@@ -1,3 +1,5 @@
+import XYSet from './XYSet';
+
 class Grid2d {
 
   // A Grid2d is a simple object {sx, sy, rows}
@@ -92,6 +94,22 @@ class Grid2d {
   }
 
   ///////////////////////////////////////////////////////////////////////
+  // Methods to generate square regions
+  randomSquareRegion(rng, sideLen) {
+    const left = Math.max(0, Math.floor(rng() * (this.sx - sideLen)));
+    const top = Math.max(0, Math.floor(rng() * (this.sy - sideLen)));
+    const right = Math.min(this.sx, left + sideLen);
+    const bottom = Math.min(this.sy, top + sideLen);
+    const resultSet = new XYSet(this);
+    for (let x = left; x < right; ++x) {
+      for (let y = top; y < bottom; ++y) {
+        resultSet.addXY(x, y);
+      }
+    }
+    return resultSet;
+  }
+
+  ///////////////////////////////////////////////////////////////////////
   // Logging & Debugging
   toString() {
     let out = '';
@@ -107,4 +125,3 @@ class Grid2d {
 }
 
 export default Grid2d;
-

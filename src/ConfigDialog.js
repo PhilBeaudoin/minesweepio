@@ -241,6 +241,8 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
                 <MenuItem value={ALGO.SMALL_EMPTY_ZONES}>{s('Small empty zones')}</MenuItem>
                 <MenuItem value={ALGO.MEDIUM_EMPTY_ZONES}>{s('Medium empty zones')}</MenuItem>
                 <MenuItem value={ALGO.BIG_EMPTY_ZONES}>{s('Big empty zones')}</MenuItem>
+                <MenuItem value={ALGO.LOTS_OF_SIX}>{s('Orgy of six')}</MenuItem>
+                <MenuItem value={ALGO.LOTS_OF_SEVEN}>{s('Orgy of seven')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>

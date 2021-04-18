@@ -29,6 +29,13 @@ class Minefield {
     return count;
   }
 
+  computeAllDigits() {
+    this.grid.forEachXYVal((x, y, val) => {
+      if (val === '?')
+        this.grid.setXY(x, y, this.countMinesAroundXY(x, y));
+    });
+  }
+
   placeMinesAndClearInitialField(mines, setToIgnore) {
     this.grid.forEachXYVal((x, y) => {
       if (setToIgnore.has(x, y)) {
@@ -39,10 +46,7 @@ class Minefield {
     });
     this.numMines = mines.size;
 
-    this.grid.forEachXYVal((x, y, val) => {
-      if (val === '?')
-        this.grid.setXY(x, y, this.countMinesAroundXY(x, y));
-    });
+    this.computeAllDigits();
   }
 
   placeMinesRandomly(totalMines, setToIgnore, currMines) {
@@ -124,6 +128,50 @@ class Minefield {
 
   placeMinesBigZones(totalMines, setToIgnore) {
     this.placeMinesEmptyZones(totalMines, 15, setToIgnore)
+  }
+
+  placeMinesScoringDigit(scorePerDigit, totalMines, setToIgnore) {
+    const lockedSet = new XYSet(this.grid);
+    lockedSet.addFromSet(setToIgnore);
+    const area = this.grid.sx * this.grid.sy;
+
+    let lastBestScore = 10000;
+    while(true) {
+      this.clearDigits();
+      const minesToPlace = totalMines - this.countMinesInSet(lockedSet);
+      const remainingCells = area - lockedSet.size
+      if (minesToPlace > remainingCells) {
+        this.placeMinesRandomly(remainingCells, lockedSet);
+        this.placeMinesRandomly(minesToPlace - remainingCells, setToIgnore);
+        this.targetNumMines = totalMines;
+        return;
+      }
+      this.placeMinesRandomly(minesToPlace, lockedSet);
+      if (lastBestScore === 0) {
+        this.numMines = totalMines;
+        return;
+      }
+      this.computeAllDigits();
+      // Generate 20 square groups of 9x9
+      let bestCellSet;
+      let bestScore = 0;
+      for (let i = 0; i < 100; ++i) {
+        const cellSet = this.grid.randomSquareRegion(this.rng, 4);
+        cellSet.removeElementsOf(lockedSet);
+        const score = this.computeScore(cellSet, scorePerDigit);
+        if (score >= bestScore) {
+          bestCellSet = cellSet;
+          bestScore = score;
+        }
+      }
+      lastBestScore = bestScore;
+      bestCellSet.forEachXY((x, y) => {
+        lockedSet.addXY(x, y);
+        this.grid.forEachNeighbor(x, y, (xx, yy) => {
+          lockedSet.addXY(xx, yy);
+        });
+      });
+    }
   }
 
   placeMinesNoBadPattern(totalMines, setToIgnore, placerFunction) {
@@ -268,8 +316,39 @@ class Minefield {
     return Math.round(spacesLeft * desiredDensity);
   }
 
+  computeScore(cellSet, scorePerDigit) {
+    let totalScore = 0;
+    let totalDigits = 0;
+    cellSet.forEachXY((x, y) => {
+      const val = parseInt(this.grid.getXY(x, y));
+      if (!isNaN(val)) {
+        totalDigits += 1;
+        totalScore += scorePerDigit[val];
+      }
+    });
+    if (totalDigits === 0)
+      return 0;
+    return totalScore / totalDigits;
+  }
+
+  countMinesInSet(cellSet) {
+    let count = 0;
+    cellSet.forEachXY((x, y) => {
+      if (this.grid.getXY(x, y) === '*')
+        count++;
+    });
+    return count;
+  }
+
   countMinesAroundXY(x, y) {
     return this.grid.countAroundXYIf(x, y, val => val === '*');
+  }
+
+  clearDigits() {
+    this.grid.forEachXYVal((x, y, val) => {
+      if (val !== '*')
+        this.grid.setXY(x, y, '?');
+    });
   }
 
   shuffleMinesInSquare(x1, y1, x2, y2, setToIgnore) {
