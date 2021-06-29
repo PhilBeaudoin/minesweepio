@@ -118,6 +118,10 @@ class Minefield {
     this.placeMinesRandomly(totalMines, newSetToIgnore)
   }
 
+  placeMinesMicroZones(totalMines, setToIgnore) {
+    this.placeMinesEmptyZones(totalMines, 2, setToIgnore)
+  }
+
   placeMinesSmallZones(totalMines, setToIgnore) {
     this.placeMinesEmptyZones(totalMines, 5, setToIgnore)
   }
