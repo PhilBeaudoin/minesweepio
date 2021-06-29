@@ -3,13 +3,14 @@ const ALGO = {
   ALWAYS_LOGICAL: 1,
   REDUCE_BADLUCK: 2,
   SPACED_OUT: 3,
-  SMALL_EMPTY_ZONES: 4,
-  MEDIUM_EMPTY_ZONES: 5,
-  BIG_EMPTY_ZONES: 6,
-  LOTS_OF_SIX: 7,
-  LOTS_OF_SEVEN: 8,
-  FAVOR_SMALL: 9,
-  isValid: (algo) => Number.isInteger(algo) && algo >= 0 && algo <= 9
+  MICRO_EMPTY_ZONES: 4,
+  SMALL_EMPTY_ZONES: 5,
+  MEDIUM_EMPTY_ZONES: 6,
+  BIG_EMPTY_ZONES: 7,
+  LOTS_OF_SIX: 8,
+  LOTS_OF_SEVEN: 9,
+  FAVOR_SMALL: 10,
+  isValid: (algo) => Number.isInteger(algo) && algo >= 0 && algo <= 10
 }
 
 export default ALGO;

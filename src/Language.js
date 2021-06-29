@@ -14,6 +14,7 @@ const localizations = {
   "Always logical": {fr: "Toujours logique"},
   "Reduce bad luck™": {fr: "Malchance réduite™"},
   "Well spaced out mines": {fr: "Mines bien espacées"},
+  "Micro empty zones": {fr: "Zones dégagées (micro)"},
   "Small empty zones": {fr: "Zones dégagées (petites)"},
   "Medium empty zones": {fr: "Zones dégagées (medium)"},
   "Big empty zones": {fr: "Zones dégagées (grandes)"},

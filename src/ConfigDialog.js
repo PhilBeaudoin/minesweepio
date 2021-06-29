@@ -238,6 +238,7 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
                 <MenuItem value={ALGO.ALWAYS_LOGICAL}>{s('Always logical')}</MenuItem>
                 <MenuItem value={ALGO.REDUCE_BADLUCK}>{s('Reduce bad luck™')}</MenuItem>
                 <MenuItem value={ALGO.SPACED_OUT}>{s('Well spaced out mines')}</MenuItem>
+                <MenuItem value={ALGO.MICRO_EMPTY_ZONES}>{s('Micro empty zones')}</MenuItem>
                 <MenuItem value={ALGO.SMALL_EMPTY_ZONES}>{s('Small empty zones')}</MenuItem>
                 <MenuItem value={ALGO.MEDIUM_EMPTY_ZONES}>{s('Medium empty zones')}</MenuItem>
                 <MenuItem value={ALGO.BIG_EMPTY_ZONES}>{s('Big empty zones')}</MenuItem>
