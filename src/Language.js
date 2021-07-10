@@ -21,6 +21,7 @@ const localizations = {
   "Party of six": {fr: "Party de six"},
   "Orgy of seven": {fr: "Orgie de sept"},
   "Smaller is better": {fr: "On préfère les petits"},
+  "Special of the month": {fr: "Spécial du mois"},
   "Reveal corners": {fr: "Révéler les coins"},
   "Annoying fairies": {fr: "Fées gossantes"},
   "Specify a seed": {fr: "Spécifier une seed"},
