@@ -145,7 +145,11 @@ function createMinefield(config) {
   } else if (config.algorithm === ALGO.FAVOR_SMALL) {
     mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
       mf.placeMinesScoringDigit.bind(mf, [20, 15, 10, 3, 2, 1, 0, 0, 0]));
-  } else {
+  } else if (config.algorithm === ALGO.SPECIAL_OF_THE_MONTH) {
+    mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
+      mf.placeMinesScoringDigitV2.bind(mf, [5, 10, 5, 0, 10, 20, 20, 20, 0]));
+  } 
+  else {
     mf.placeMinesRandomly(config.numMines, setToIgnore);
   }
 

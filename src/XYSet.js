@@ -72,6 +72,12 @@ class XYSet {
     }
     return result;
   }
+
+  randomXY(rng) {
+    if (rng === undefined) rng = Math.random;
+    const array = Array.from(this.set);
+    return this.grid.fromKey(array[Math.floor(rng() * array.length)]);;
+  }
 }
 
 export default XYSet;
