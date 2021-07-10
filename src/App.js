@@ -15,7 +15,7 @@ import ALGO from './algoTypes.js';
 
 const autosolve = false;
 const maxSeed = 10000000;
-const version = 'v 1.20';
+const version = 'v 1.21';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
