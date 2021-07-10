@@ -10,7 +10,8 @@ const ALGO = {
   LOTS_OF_SIX: 8,
   LOTS_OF_SEVEN: 9,
   FAVOR_SMALL: 10,
-  isValid: (algo) => Number.isInteger(algo) && algo >= 0 && algo <= 10
+  SPECIAL_OF_THE_MONTH: 11,
+  isValid: (algo) => Number.isInteger(algo) && algo >= 0 && algo <= 11
 }
 
 export default ALGO;

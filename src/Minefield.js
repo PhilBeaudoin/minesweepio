@@ -182,6 +182,102 @@ class Minefield {
     }
   }
 
+  placeMinesScoringDigitV2(scorePerDigit, totalMines, setToIgnore) {
+    const scoreSum = scorePerDigit.reduce((a, b) => a + b, 0);
+    const desiredScoreForDigit = scorePerDigit.map(a => a / scoreSum);
+
+    const digitSets = [
+      new XYSet(this.grid),
+      new XYSet(this.grid),
+      new XYSet(this.grid),
+      new XYSet(this.grid),
+      new XYSet(this.grid),
+      new XYSet(this.grid),
+      new XYSet(this.grid),
+      new XYSet(this.grid),
+      new XYSet(this.grid),
+    ];
+
+    const currentScoreForDigit = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const improvementByRemovingDigit = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    const computeCurrentScores = () => {
+      digitSets.forEach((xySet, digit) => {
+        currentScoreForDigit[digit] = xySet.size;
+      });
+      const currentScoreSum = currentScoreForDigit.reduce((a, b) => a + b, 0);
+      currentScoreForDigit.forEach((score, digit) => {
+        currentScoreForDigit[digit] /= currentScoreSum;
+        improvementByRemovingDigit[digit] = currentScoreForDigit[digit] - desiredScoreForDigit[digit];
+      });
+    };
+
+    this.computeAllDigits();
+    this.grid.forEachXYVal((x, y, val) => {
+      if (!setToIgnore.hasXY(x,y)) {
+        const numVal = parseInt(val);
+        if (!isNaN(numVal))
+          digitSets[numVal].addXY(x, y);
+      }
+    });
+
+    while(totalMines > 0) {
+      computeCurrentScores();
+
+      let bestDigitToIncrease = 0;
+      let bestDigitScore = -1000000;
+      for(let digit = 0; digit <= 7; ++digit) {
+        const digitScore = improvementByRemovingDigit[digit] - improvementByRemovingDigit[digit + 1];
+        if (digitScore > bestDigitScore && currentScoreForDigit[digit] > 0) {
+          bestDigitToIncrease = digit;
+          bestDigitScore = digitScore;
+        }
+      }
+      let [x, y] = digitSets[bestDigitToIncrease].randomXY(this.rng);
+
+
+      // Hack, start with the one we wanted to increase, in case we cant find a spot without a mine around it.
+      let bestXToReplaceByAMine = x;
+      let bestYToReplaceByAMine = y;
+      let bestXYScore = -1000000;
+      this.grid.forEachNeighbor(x, y, (xx, yy) => {
+        const numVal = parseInt(this.grid.getXY(xx, yy));
+        if (!isNaN(numVal) && !setToIgnore.hasXY(xx, yy)) {
+          const xyScore = improvementByRemovingDigit[numVal];
+          if (xyScore > bestXYScore || (xyScore === bestXYScore  && this.rng() > 0.5)) {
+            bestXToReplaceByAMine = xx;
+            bestYToReplaceByAMine = yy;
+            bestXYScore = xyScore;
+          }
+        }
+      });
+
+      x = bestXToReplaceByAMine;
+      y = bestYToReplaceByAMine;
+      const replacedValue = parseInt(this.grid.getXY(x, y));
+      if (isNaN(replacedValue)) {
+        console.error('Internal error, unexpected non-digit value!');
+      } else {
+        digitSets[replacedValue].deleteXY(x, y);
+        this.grid.setXY(x, y, '*');
+        totalMines--;
+        this.numMines++;
+        // Increase everybody around that new mine
+        this.grid.forEachNeighbor(x, y, (xx, yy) => {
+          const numVal = parseInt(this.grid.getXY(xx, yy));
+          if (!isNaN(numVal)) { 
+            this.grid.setXY(xx, yy, numVal + 1);
+            if (!setToIgnore.hasXY(xx, yy)) {
+              digitSets[numVal].deleteXY(xx, yy);
+              digitSets[numVal + 1].addXY(xx, yy);
+            }
+          }
+        });
+      }
+    }
+    this.clearDigits();
+  }
+
   placeMinesNoBadPattern(totalMines, setToIgnore, placerFunction) {
     let patterns = [
       Pattern.fromString(['*??*',     // Pattern 0
