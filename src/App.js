@@ -15,7 +15,7 @@ import ALGO from './algoTypes.js';
 
 const autosolve = false;
 const maxSeed = 10000000;
-const version = 'v 1.21';
+const version = 'v 1.22';
 
 const defaultConfig = {
   'size': {x: 9, y: 9} ,
@@ -145,9 +145,15 @@ function createMinefield(config) {
   } else if (config.algorithm === ALGO.FAVOR_SMALL) {
     mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
       mf.placeMinesScoringDigit.bind(mf, [20, 15, 10, 3, 2, 1, 0, 0, 0]));
-  } else if (config.algorithm === ALGO.SPECIAL_OF_THE_MONTH) {
+  } else if (config.algorithm === ALGO.FIVE_PART_TWO) {
     mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
-      mf.placeMinesScoringDigitV2.bind(mf, [5, 10, 5, 0, 10, 20, 20, 20, 0]));
+      mf.placeMinesFavoringDigit.bind(mf, 5));
+  } else if (config.algorithm === ALGO.RETURN_OF_THE_SIXES) {
+    mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
+      mf.placeMinesFavoringDigit.bind(mf, 6));
+  } else if (config.algorithm === ALGO.SEVEN_STRIKES_BACK) {
+    mf.placeMinesNoBadPattern(config.numMines, setToIgnore,
+      mf.placeMinesFavoringDigit.bind(mf, 7));
   } 
   else {
     mf.placeMinesRandomly(config.numMines, setToIgnore);

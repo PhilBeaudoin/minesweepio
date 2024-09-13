@@ -245,7 +245,9 @@ function ConfigDialog({ onApply, onCancel, open, config, sizeBounds,
                 <MenuItem value={ALGO.LOTS_OF_SIX}>{s('Party of six')}</MenuItem>
                 <MenuItem value={ALGO.LOTS_OF_SEVEN}>{s('Orgy of seven')}</MenuItem>
                 <MenuItem value={ALGO.FAVOR_SMALL}>{s('Smaller is better')}</MenuItem>
-                <MenuItem value={ALGO.SPECIAL_OF_THE_MONTH}>{s('Special of the month')}</MenuItem>
+                <MenuItem value={ALGO.FIVE_PART_TWO}>{s('Five, Part 2')}</MenuItem>
+                <MenuItem value={ALGO.RETURN_OF_THE_SIXES}>{s('Return of the sixes')}</MenuItem>
+                <MenuItem value={ALGO.SEVEN_STRIKES_BACK}>{s('Seven strikes back')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>

@@ -278,6 +278,43 @@ class Minefield {
     this.clearDigits();
   }
 
+  placeMinesFavoringDigit(digitToFavor, totalMines, setToIgnore) {
+    // Using [0, 2] instead of [-1, 1] because XYSet doesn't work with negatives
+    const directions = new XYSet(this.grid);
+    for (let x = 0; x <= 2; ++x) {
+      for (let y = 0; y <= 2; ++y) {
+        if (x !== 1 || y !== 1)
+          directions.addXY(x, y)
+      }
+    }
+   
+    const options = new XYSet(this.grid);
+    const addMine = (x, y) => {
+      if (options.size < totalMines && this.grid.isValidXY(x, y) && 
+      !setToIgnore.hasXY(x, y) && !options.hasXY(x, y))
+        options.addXY(x, y);
+    }
+
+    const numSeeds = totalMines/digitToFavor;
+    const radius = Math.sqrt(this.grid.sx * this.grid.sy * 0.6 / numSeeds);
+    for (const p of poissonDiscSampler(this.grid.sx, this.grid.sy, radius, this.rng)) {
+      const [x, y] = [Math.floor(p[0]), Math.floor(p[1])];
+      const candidates = directions.randomSubset(digitToFavor, this.rng);
+      candidates.forEachXY((dx, dy) => addMine(x + dx - 1, y + dy - 1))
+    }
+
+    if (options.size === totalMines) {
+      console.log(`Got ${options.size} options for ${totalMines} mines.`);
+      console.log(`Using them all.`);
+      this.placeMinesAndClearInitialField(options, setToIgnore);
+    } else {
+      console.log(`Only ${options.size} options for ${totalMines} mines!`);
+      console.log(`Adding more randomly.`);
+      this.placeMinesRandomly(totalMines, setToIgnore, options);
+    }    
+  }
+
+
   placeMinesNoBadPattern(totalMines, setToIgnore, placerFunction) {
     let patterns = [
       Pattern.fromString(['*??*',     // Pattern 0
